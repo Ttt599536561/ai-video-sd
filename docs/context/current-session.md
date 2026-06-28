@@ -1,6 +1,6 @@
 # 当前窗口上下文
 
-更新时间：2026-06-28
+更新时间：2026-06-29
 
 ## 接续摘要
 
@@ -72,10 +72,12 @@
 - ~~完成真实供应商参考素材提交修复：前端提交 data URL，后端保存 reference asset 并向供应商提交公网 URL，避免供应商接收 base64 data URL 后返回 `status_code=500, task_id is empty`。~~
 - ~~完成管理员后台“系统设置”：新增公网 API 地址配置，优先用于供应商抓取参考素材；新增 Prisma `system_settings` 表和 `/api/admin/system-settings` 接口。部署或本地更新后需执行 `npm run prisma:deploy` 和 `npm run prisma:generate`。~~
 - ~~完成供应商 TLS 证书错误友好提示：公网 API 地址证书过期/不可验证会映射为 `PUBLIC_API_BASE_URL_CERT_INVALID`。~~
+- ~~完成公网生产部署：用户已确认系统部署成功并已上线。后续更新按 GitHub `main` 拉取并发布，不需要重新初始化管理员或重新配置已存在的生产数据库业务数据。~~
+- ~~完成站点图标补丁：新增根目录 `favicon.svg`，三个入口页统一引用 `/favicon.svg`，部署文档已要求把 `favicon.svg` 同步到 `/var/www/ai-video`。~~
 
 ## 当前状态
 
-- 前端仍是根目录静态 HTML/CSS/JS：`index.html`、`auth.html`、`admin.html`。
+- 前端仍是根目录静态 HTML/CSS/JS：`index.html`、`auth.html`、`admin.html`，并包含站点图标 `favicon.svg`。
 - 后端位于 `backend/`，Fastify + TypeScript + Prisma + Vitest。
 - 当前代码包含 6 个 Prisma migration；最新新增 `20260628214500_add_system_settings` 用于后台系统设置，部署时需要执行 `npm run prisma:deploy`，再执行或确保已执行 `npm run prisma:generate`。
 - 当前本地 `backend/.env` 已设置 `VIDEO_PROVIDER_REAL_JOBS=true`；用户点击生成视频会走真实供应商 `POST /v1/videos`。未配置该开关时，代码仍可回到本地 Mock Provider。
@@ -94,7 +96,8 @@
 - 生产级模型 Key 轮换和旧密文迁移已完成；审计日志后续可补筛选、分页、导出和保留策略；错误提示后续可补更细字段级表单提示。
 - 当前真实供应商提交已验证到供应商业务错误层：历史一次真实 `POST /v1/videos` 返回 `insufficient_user_quota`；后续又发现上传参考素材时供应商会校验公网参考素材 URL 的 HTTPS 证书，证书过期会拒绝抓取。用户已说明额度已充值，并要求后续持续允许真实生成。后续用户反馈真实生成已经能成功生成视频。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 通过；本地已对新增 `system_settings` 执行 `npm run prisma:deploy`；本地 `/health` 正常。历史 `npm run provider:smoke` 只读调用供应商 `GET /v1/models` 通过并返回 `video-ds-2.0`、`video-ds-2.0-fast`。
-- 当前部署任务已补齐 GitHub + Debian 12 文档：新增根 `README.md` 和 `docs/operations/debian-12-github-deployment-guide.md`，并更新 Debian 模板、部署索引、架构/模块/上下文文档。结论是本地未上线时供应商无法抓取上传参考素材；上线后需配置公网 HTTPS、Nginx `/api/` 反代和管理后台公网 API 地址。新服务器的新数据库需要重新配置模型、积分套餐、系统设置和用户积分，除非做数据库备份恢复。
+- 当前生产部署已由用户确认成功上线。上线系统后续应用普通代码补丁时，生产 PostgreSQL 内的管理员账号、模型配置、供应商 URL/Key、积分套餐、系统设置、兑换码和用户积分会保留；只有换数据库、清空数据库或恢复另一份备份时才需要重新初始化。
+- 当前 favicon 补丁不涉及数据库 migration 或后端逻辑；服务器上最短更新方式是 `cd /opt/ai-video && sudo -u ai-video git pull origin main`，再把 `auth.html`、`index.html`、`admin.html`、`favicon.svg` 安装到 `/var/www/ai-video`，然后 `sudo nginx -t && sudo systemctl reload nginx`。
 
 ## 下一步建议
 

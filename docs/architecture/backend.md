@@ -35,7 +35,7 @@
 - 新增或更新模型 Key 时写入当前 `keyVersion`；读取旧密文时按记录上的 `keyVersion` 选择解密 Key，缺失版本按 `1` 兼容旧数据。
 - 默认真实供应商只通过后端环境变量 `VIDEO_PROVIDER_BASE_URL` 和 `VIDEO_PROVIDER_API_KEY` 配置，不进入前端。
 - 供应商抓取参考素材使用的公网 API 地址优先来自管理后台系统设置，其次来自 `PUBLIC_API_BASE_URL` 环境变量，再尝试从请求域名推断；该地址不能是本机/内网地址，生产应使用证书有效的 HTTPS 域名。
-- 真实生成提交需要后端显式设置 `VIDEO_PROVIDER_REAL_JOBS=true`；当前本地已启用。历史一次真实联调返回 `insufficient_user_quota`，之后用户说明额度已充值并要求后续持续允许真实生成。
+- 真实生成提交需要后端显式设置 `VIDEO_PROVIDER_REAL_JOBS=true`；当前生产部署已上线并按该开关持续允许真实生成。历史一次真实联调返回 `insufficient_user_quota`，之后用户说明额度已充值并要求后续持续允许真实生成。
 - 参考图片、参考视频和参考音频只能作为用户任务 payload 进入后端，再由后端提交供应商 `images`/`videos`/`audios` 字段；数量限制为图片最多 4 张、视频最多 3 个、音频最多 1 个；前端限制参考视频+参考音频原始文件总大小不超过 36MB，后端会拒绝超大的图片 data URL，前端不得接触供应商 Key。非 HTTP(S) data URL 会先保存成 reference asset，再通过公开的 `/api/video/reference-assets/:jobId/:filename` 路由供供应商拉取。
 - 生产环境必须使用强 `JWT_SECRET` 和 `REDEMPTION_HASH_SECRET`。
 - 管理员初始化密钥 `BOOTSTRAP_ADMIN_SECRET` 只用于创建首个管理员；数据库已有管理员后 bootstrap 会被拒绝，创建后应删除或轮换该密钥。

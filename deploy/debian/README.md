@@ -269,6 +269,27 @@ https://example.com/admin.html
 
 ## 12. 发布更新流程
 
+如果只是应用 `favicon.svg` 这类静态前端补丁，已上线服务器可以使用短流程：
+
+```bash
+cd /opt/ai-video
+sudo -u ai-video git pull origin main
+
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/index.html /var/www/ai-video/index.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/ai-video/admin.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
+
+sudo nginx -t
+sudo systemctl reload nginx
+curl -fsS https://example.com/health
+curl -I https://example.com/favicon.svg
+```
+
+这类静态补丁不需要重新创建管理员，不需要重新配置积分套餐、模型配置、供应商 URL/Key 或系统设置。
+
+如果更新包含后端代码、依赖或数据库迁移，使用完整流程：
+
 ```bash
 sudo systemctl stop ai-video-api
 rsync -az --delete \
