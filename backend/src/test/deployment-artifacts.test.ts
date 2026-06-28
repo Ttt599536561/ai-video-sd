@@ -15,6 +15,7 @@ describe("Debian deployment artifacts", () => {
     expect(readme).toContain("/var/lib/ai-video/storage/videos");
     expect(readme).toContain("npm run prisma:deploy");
     expect(readme).toContain("BOOTSTRAP_ADMIN_SECRET");
+    expect(readme).toContain("/opt/ai-video/favicon.svg");
     expect(service).toContain("EnvironmentFile=/etc/ai-video/backend.env");
     expect(service).toContain("ExecStart=/usr/bin/node /opt/ai-video/backend/dist/server.js");
     expect(nginx).toContain("location /api/");

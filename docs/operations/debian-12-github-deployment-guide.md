@@ -306,6 +306,7 @@ sudo -u ai-video bash -lc 'set -a; . /etc/ai-video/backend.env; set +a; cd /opt/
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/index.html /var/www/ai-video/index.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/ai-video/admin.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
 ```
 
 说明：把登录页、用户端、管理后台复制到 Nginx 静态目录。
@@ -697,6 +698,7 @@ sudo -u ai-video bash -lc 'set -a; . /etc/ai-video/backend.env; set +a; cd /opt/
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/index.html /var/www/ai-video/index.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/ai-video/admin.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
 ```
 
 说明：更新前端静态文件。

@@ -33,6 +33,7 @@ npm run dev
 
 - 用户端：`auth.html`、`index.html`
 - 管理后台：`admin.html`
+- 站点图标：`favicon.svg`
 - 后端健康检查：`http://127.0.0.1:4000/health`
 
 ## 生产环境配置重点

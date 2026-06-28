@@ -156,6 +156,7 @@ sudo -u ai-video bash -lc 'set -a; . /etc/ai-video/backend.env; set +a; cd /opt/
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/index.html /var/www/ai-video/index.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/ai-video/admin.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
 ```
 
 ## 8. 配置 systemd
@@ -289,6 +290,7 @@ sudo -u ai-video bash -lc 'set -a; . /etc/ai-video/backend.env; set +a; cd /opt/
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/index.html /var/www/ai-video/index.html
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/ai-video/admin.html
+sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
 
 sudo systemctl start ai-video-api
 sudo nginx -t && sudo systemctl reload nginx

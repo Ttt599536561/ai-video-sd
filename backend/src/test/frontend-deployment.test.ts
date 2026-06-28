@@ -25,6 +25,16 @@ describe("frontend deployment defaults", () => {
     expect(html).not.toContain("window.refreshIcons();");
   });
 
+  it.each(pages)("declares the bundled SVG favicon: %s", (page) => {
+    const html = readFileSync(join(process.cwd(), "..", page), "utf8");
+
+    expect(html).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml" />');
+
+    const favicon = readFileSync(join(process.cwd(), "..", "favicon.svg"), "utf8");
+    expect(favicon).toContain("<svg");
+    expect(favicon).toContain('viewBox="0 0 64 64"');
+  });
+
   it.each(pages)("keeps frontend HTML files free of UTF-8 BOM bytes: %s", (page) => {
     const bytes = readFileSync(join(process.cwd(), "..", page));
 

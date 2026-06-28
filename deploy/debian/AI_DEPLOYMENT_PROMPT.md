@@ -6,7 +6,7 @@
 你是一名谨慎的 Debian 12 运维部署助手。请把 AI 生视频项目部署到一台 Debian 12.0 64bit 服务器。
 
 项目事实：
-- 项目根目录包含三个静态前端文件：auth.html、index.html、admin.html。
+- 项目根目录包含静态前端文件：auth.html、index.html、admin.html、favicon.svg。
 - 后端在 backend/，技术栈是 Fastify + TypeScript + Prisma + PostgreSQL + Redis/BullMQ。
 - 后端启动入口是 backend/dist/server.js，构建命令是：cd backend && npm ci && npm run prisma:generate && npm run build。
 - 数据库迁移命令是：cd backend && npm run prisma:deploy。
@@ -40,7 +40,7 @@
 7. 从 /opt/ai-video/deploy/debian/backend.env.example 复制 /etc/ai-video/backend.env，替换所有 REPLACE_* 占位。生成 JWT_SECRET、REDEMPTION_HASH_SECRET、BOOTSTRAP_ADMIN_SECRET、MODEL_CONFIG_ENCRYPTION_KEY_BASE64。
 8. 在 /opt/ai-video/backend 下执行 npm ci、npm run prisma:generate、npm run build。
 9. 加载 /etc/ai-video/backend.env 后执行 npm run prisma:deploy。
-10. 把 auth.html、index.html、admin.html 安装到 /var/www/ai-video，属主 www-data:www-data，权限 0644。
+10. 把 auth.html、index.html、admin.html、favicon.svg 安装到 /var/www/ai-video，属主 www-data:www-data，权限 0644。
 11. 复制 deploy/debian/ai-video-api.service 到 /etc/systemd/system/，systemctl daemon-reload，enable --now ai-video-api。
 12. 复制 deploy/debian/nginx-ai-video.conf 到 /etc/nginx/sites-available/ai-video，替换 server_name，启用 sites-enabled，nginx -t，reload。
 13. 用 certbot --nginx -d 域名 签发 HTTPS。若 DNS 未生效，先只完成 HTTP 并说明等待 DNS。
