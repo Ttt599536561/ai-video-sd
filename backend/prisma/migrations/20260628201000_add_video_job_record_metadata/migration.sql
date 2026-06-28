@@ -1,0 +1,4 @@
+ALTER TABLE "video_jobs" ADD COLUMN "aspect_ratio" TEXT;
+ALTER TABLE "video_jobs" ADD COLUMN "image_count" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "video_jobs" ADD COLUMN "video_count" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "video_jobs" ADD COLUMN "audio_count" INTEGER NOT NULL DEFAULT 0;

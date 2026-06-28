@@ -1,0 +1,1999 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>即刻影像 - 管理后台原型</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --ink: #17201d;
+        --muted: #68756f;
+        --line: #dce4df;
+        --panel: #ffffff;
+        --wash: #f4f7f5;
+        --brand: #176b5a;
+        --danger: #c94f45;
+        --shadow: 0 16px 48px rgba(23, 40, 34, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--wash);
+        visibility: hidden;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+
+      body.admin-ready {
+        visibility: visible;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .admin {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: 100vh;
+        padding: 22px 16px;
+        color: #e9f3ef;
+        background: #101816;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px 8px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border-radius: 8px;
+        color: #101816;
+        background: #f0c45a;
+      }
+
+      .brand strong {
+        display: block;
+        font-size: 16px;
+      }
+
+      .brand span {
+        display: block;
+        margin-top: 2px;
+        color: #9ab0a8;
+        font-size: 12px;
+      }
+
+      .nav {
+        display: grid;
+        gap: 6px;
+      }
+
+      .nav a,
+      .nav button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 42px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 8px;
+        color: #b7cac3;
+        background: transparent;
+        text-align: left;
+        text-decoration: none;
+      }
+
+      .nav .active {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .main {
+        min-width: 0;
+        padding: 22px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .topbar p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 13px;
+      }
+
+      .view {
+        display: none;
+      }
+
+      .view.active {
+        display: block;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.7fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .redemption-layout {
+        display: grid;
+        gap: 18px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .panel-header span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .body {
+        padding: 18px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        background: #fff;
+      }
+
+      textarea {
+        min-height: 220px;
+        padding: 12px;
+        resize: vertical;
+        line-height: 1.6;
+      }
+
+      select {
+        appearance: none;
+        background-image:
+          linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position:
+          calc(100% - 18px) 17px,
+          calc(100% - 13px) 17px;
+        background-size: 5px 5px;
+        background-repeat: no-repeat;
+      }
+
+      .secret {
+        color: #3a4843;
+        background: #f8fbf9;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .redemption-table-shell {
+        height: 520px;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      .redemption-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 12px 18px 18px;
+      }
+
+      .redemption-pagination span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .table {
+        width: 100%;
+        min-width: 760px;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .table th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .mini-btn,
+      .primary,
+      .ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        background: #fff;
+        font-size: 12px;
+      }
+
+      .primary {
+        min-height: 40px;
+        border: 0;
+        color: #fff;
+        background: var(--brand);
+      }
+
+      .danger {
+        color: var(--danger);
+      }
+
+      .note {
+        margin: 0;
+        padding: 12px;
+        border: 1px solid #e3d3a8;
+        border-radius: 8px;
+        color: #6c5016;
+        background: #fff8e6;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .status-ok {
+        color: var(--brand);
+      }
+
+      .status-ban {
+        color: var(--danger);
+      }
+
+      .tiny {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        background: rgba(16, 24, 22, 0.52);
+      }
+
+      .modal-backdrop[hidden] {
+        display: none;
+      }
+
+      .modal {
+        width: min(720px, 100%);
+        max-height: calc(100vh - 40px);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .modal-body {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .center-notice {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: none;
+        place-items: center;
+        padding: 20px;
+        background: rgba(16, 24, 22, 0.28);
+      }
+
+      .center-notice.show {
+        display: grid;
+      }
+
+      .notice-dialog {
+        display: grid;
+        gap: 12px;
+        width: min(360px, 100%);
+        padding: 22px;
+        border: 1px solid rgba(23, 107, 90, 0.18);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 22px 70px rgba(16, 24, 22, 0.24);
+        text-align: center;
+      }
+
+      .notice-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        margin: 0 auto;
+        place-items: center;
+        border-radius: 999px;
+        color: #fff;
+        background: var(--brand);
+      }
+
+      .center-notice.error .notice-icon {
+        background: var(--danger);
+      }
+
+      .notice-dialog strong {
+        font-size: 18px;
+      }
+
+      .notice-dialog p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .notice-close {
+        min-height: 38px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--brand);
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .summary {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .summary span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .summary strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 24px;
+      }
+
+      @media (max-width: 1120px) {
+        .admin {
+          grid-template-columns: 88px minmax(0, 1fr);
+        }
+
+        .brand div:last-child,
+        .nav span {
+          display: none;
+        }
+
+        .brand,
+        .nav a,
+        .nav button {
+          justify-content: center;
+        }
+
+        .grid,
+        .form-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark"><i data-lucide="shield-check" size="20"></i></div>
+          <div>
+            <strong>管理后台</strong>
+            <span>后端安全配置</span>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="active" type="button" data-admin-target="models">
+            <i data-lucide="cpu" size="18"></i><span>模型配置</span>
+          </button>
+          <button type="button" data-admin-target="plans">
+            <i data-lucide="badge-cent" size="18"></i><span>积分套餐</span>
+          </button>
+          <button type="button" data-admin-target="redemption">
+            <i data-lucide="ticket-check" size="18"></i><span>兑换码管理</span>
+          </button>
+          <button type="button" data-admin-target="users">
+            <i data-lucide="users" size="18"></i><span>用户管理</span>
+          </button>
+          <button type="button" data-admin-target="records">
+            <i data-lucide="video" size="18"></i><span>生成记录</span>
+          </button>
+          <button type="button" data-admin-target="audit">
+            <i data-lucide="clipboard-list" size="18"></i><span>操作审计</span>
+          </button>
+          <button type="button" data-admin-target="settings">
+            <i data-lucide="settings" size="18"></i><span>系统设置</span>
+          </button>
+          <a href="index.html"><i data-lucide="arrow-left" size="18"></i><span>返回前台</span></a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1>管理员配置中心</h1>
+            <p>真实 URL 和 Key 只保存在后端，前端只读取模型名、价格、积分等可展示字段。</p>
+          </div>
+          <span class="pill"><i data-lucide="calendar-clock" size="16"></i> 视频与记录仅保留 3 天</span>
+        </header>
+
+        <section class="view active" id="admin-models">
+          <div class="grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>请求模型配置</h2>
+                <span>后端调用参数</span>
+              </div>
+              <div class="body">
+                <div class="form-grid">
+                  <div class="field">
+                    <label>模型名称</label>
+                    <select id="modelNameInput">
+                      <option value="">正在从供应商读取模型...</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>模型别名</label>
+                    <input id="modelDisplayInput" placeholder="例如 标准质量模型" />
+                  </div>
+                  <div class="field">
+                    <label>供应商基础 URL</label>
+                    <input id="modelBaseUrlInput" class="secret" placeholder="https://api.example.com" />
+                  </div>
+                  <div class="field">
+                    <label>提交路径</label>
+                    <input id="modelSubmitPathInput" class="secret" placeholder="/v1/video/generate" />
+                  </div>
+                  <div class="field">
+                    <label>后端密钥 Key</label>
+                    <input id="modelApiKeyInput" class="secret" placeholder="新增时必填，编辑时留空保留原 Key" />
+                  </div>
+                  <div class="field">
+                    <label>鉴权方式</label>
+                    <select id="modelAuthTypeInput">
+                      <option value="BEARER" selected>Bearer Token</option>
+                      <option value="HEADER_KEY">Header Key</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>单次消耗积分</label>
+                    <input id="modelCostInput" type="number" min="1" />
+                  </div>
+                  <div class="field">
+                    <label>状态</label>
+                    <select id="modelEnabledInput">
+                      <option value="true" selected>启用</option>
+                      <option value="false">禁用</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="actions" style="margin-top: 14px">
+                  <button class="primary" type="button" data-admin-action="save-model"><i data-lucide="save" size="16"></i>保存模型</button>
+                </div>
+                <p class="note" style="margin-top: 14px">
+                  原型仅展示字段形态。真实系统中 URL、Key、供应商鉴权、重试策略和回调签名必须只保存在服务端或密钥管理系统。
+                </p>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2>已配置模型</h2>
+              </div>
+              <div class="body table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>模型</th>
+                      <th>积分</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-model-rows>
+                    <tr>
+                      <td>video-ds-2.0</td>
+                      <td>80</td>
+                      <td>
+                        <select>
+                          <option selected>启用</option>
+                          <option>禁用</option>
+                        </select>
+                      </td>
+                      <td><button class="mini-btn">编辑</button></td>
+                    </tr>
+                    <tr>
+                      <td>video-ds-2.0-fast</td>
+                      <td>45</td>
+                      <td>
+                        <select>
+                          <option selected>启用</option>
+                          <option>禁用</option>
+                        </select>
+                      </td>
+                      <td><button class="mini-btn">编辑</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="admin-plans">
+          <div class="grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>积分套餐操作台</h2>
+                <span>编辑名称、价格、有效期、积分数</span>
+              </div>
+              <div class="body">
+                <div class="form-grid">
+                  <div class="field">
+                    <label>套餐名称</label>
+                    <input id="packageNameInput" placeholder="例如 周套餐" />
+                  </div>
+                  <div class="field">
+                    <label>价格</label>
+                    <input id="packagePriceInput" type="number" min="0" step="0.01" />
+                  </div>
+                  <div class="field">
+                    <label>积分数</label>
+                    <input id="packageCreditsInput" type="number" min="1" />
+                  </div>
+                  <div class="field">
+                    <label>有效期</label>
+                    <input id="packageValidDaysInput" type="number" min="1" />
+                  </div>
+                  <div class="field">
+                    <label>排序</label>
+                    <input id="packageSortOrderInput" type="number" />
+                  </div>
+                  <div class="field">
+                    <label>配置URL</label>
+                    <input id="packagePurchaseUrlInput" placeholder="https://pay.example.com/plan" />
+                  </div>
+                  <div class="field">
+                    <label>状态</label>
+                    <select id="packageEnabledInput">
+                      <option value="true" selected>启用</option>
+                      <option value="false">禁用</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="actions" style="margin-top: 14px">
+                  <button class="primary" type="button" data-admin-action="save-package"><i data-lucide="save" size="16"></i>保存套餐</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2>前台展示套餐</h2>
+                <span>卡片数据来源</span>
+              </div>
+              <div class="body table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>名称</th>
+                      <th>价格</th>
+                      <th>积分</th>
+                      <th>有效期</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-package-rows>
+                    <tr>
+                      <td>周套餐</td>
+                      <td>19.9 元</td>
+                      <td>100</td>
+                      <td>7 天</td>
+                      <td>
+                        <select>
+                          <option selected>启用</option>
+                          <option>禁用</option>
+                        </select>
+                      </td>
+                      <td class="actions"><button class="mini-btn">编辑</button><button class="mini-btn danger">删除</button></td>
+                    </tr>
+                    <tr>
+                      <td>月套餐</td>
+                      <td>69.9 元</td>
+                      <td>500</td>
+                      <td>30 天</td>
+                      <td>
+                        <select>
+                          <option selected>启用</option>
+                          <option>禁用</option>
+                        </select>
+                      </td>
+                      <td class="actions"><button class="mini-btn">编辑</button><button class="mini-btn danger">删除</button></td>
+                    </tr>
+                    <tr>
+                      <td>团队包</td>
+                      <td>199 元</td>
+                      <td>1800</td>
+                      <td>90 天</td>
+                      <td>
+                        <select>
+                          <option selected>启用</option>
+                          <option>禁用</option>
+                        </select>
+                      </td>
+                      <td class="actions"><button class="mini-btn">编辑</button><button class="mini-btn danger">删除</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="admin-users">
+          <div class="stack">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>用户管理</h2>
+                <span>注册时间、邮箱、积分、套餐、状态</span>
+              </div>
+              <div class="body table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>邮箱</th>
+                      <th>注册时间</th>
+                      <th>现有积分</th>
+                      <th>购买套餐</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-user-rows>
+                    <tr>
+                      <td>creator1024@example.com</td>
+                      <td>2026-06-18 09:36</td>
+                      <td>6,820</td>
+                      <td>月套餐</td>
+                      <td>
+                        <select>
+                          <option selected>正常</option>
+                          <option>封禁</option>
+                        </select>
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <button class="mini-btn">改密</button>
+                          <button class="mini-btn">改积分</button>
+                          <button class="mini-btn danger">封禁</button>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>team0877@example.com</td>
+                      <td>2026-06-21 20:12</td>
+                      <td>120</td>
+                      <td>周套餐</td>
+                      <td>
+                        <select>
+                          <option>正常</option>
+                          <option selected>封禁</option>
+                        </select>
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <button class="mini-btn">改密</button>
+                          <button class="mini-btn">改积分</button>
+                          <button class="mini-btn">解封</button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2>用户数据概览</h2>
+              </div>
+              <div class="body">
+                <div class="summary-grid">
+                  <div class="summary"><span>注册用户</span><strong data-user-total>0</strong></div>
+                  <div class="summary"><span>正常用户</span><strong data-user-active>0</strong></div>
+                  <div class="summary"><span>封禁用户</span><strong data-user-banned>0</strong></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="admin-redemption">
+          <div class="redemption-layout">
+            <section class="panel">
+              <div class="panel-header">
+                <h2>批量生成兑换码</h2>
+                <span>生成后可复制给用户兑换积分</span>
+              </div>
+              <div class="body">
+                <div class="form-grid">
+                  <div class="field">
+                    <label>批次名称</label>
+                    <input id="redeemBatchName" placeholder="例如 运营活动兑换码" />
+                  </div>
+                  <div class="field">
+                    <label>生成数量</label>
+                    <input id="redeemBatchQuantity" type="number" min="1" max="5000" />
+                  </div>
+                  <div class="field">
+                    <label>每个兑换码积分数</label>
+                    <input id="redeemBatchCredits" type="number" min="1" />
+                  </div>
+                  <div class="field">
+                    <label>有效期</label>
+                    <select id="redeemBatchValidity">
+                      <option value="permanent" selected>永久有效</option>
+                      <option value="custom">自定义天数</option>
+                    </select>
+                  </div>
+                  <div class="field" id="redeemBatchExpiresField" hidden>
+                    <label>有效天数</label>
+                    <input id="redeemBatchValidityDays" type="number" min="1" placeholder="例如 30" />
+                  </div>
+                </div>
+                <div class="actions" style="margin-top: 14px">
+                  <button class="primary" type="button" data-redemption-generate>
+                    <i data-lucide="ticket-plus" size="16"></i>批量生成兑换码
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h2>全部兑换码记录</h2>
+                <span id="redemptionCodeCount">0 个兑换码</span>
+              </div>
+              <div class="body table-wrap redemption-table-shell">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>兑换码</th>
+                      <th>批次</th>
+                      <th>积分</th>
+                      <th>有效期</th>
+                      <th>状态</th>
+                      <th>生成时间</th>
+                      <th>兑换信息</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody data-redemption-code-rows>
+                    <tr>
+                      <td colspan="8">暂无兑换码记录。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="redemption-pagination" data-redemption-pagination></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="admin-records">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>生成视频记录</h2>
+              <span>管理员只查看最近 3 天</span>
+            </div>
+            <div class="body table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>用户邮箱</th>
+                    <th>模型</th>
+                    <th>提示词</th>
+                    <th>尺寸</th>
+                    <th>分辨率</th>
+                    <th>时长</th>
+                    <th>上传素材</th>
+                    <th>生成时间</th>
+                    <th>视频生成时长</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody data-record-rows>
+                  <tr>
+                    <td colspan="11">暂无视频记录。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="admin-audit">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>操作审计</h2>
+              <span>最近管理写操作</span>
+            </div>
+            <div class="body table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>管理员</th>
+                    <th>动作</th>
+                    <th>对象</th>
+                    <th>摘要</th>
+                    <th>IP</th>
+                  </tr>
+                </thead>
+                <tbody data-audit-log-rows>
+                  <tr>
+                    <td colspan="6">暂无审计日志。</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="admin-settings">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>系统设置</h2>
+              <span>供应商访问参考素材时使用</span>
+            </div>
+            <div class="body">
+              <div class="form-grid">
+                <div class="field">
+                  <label>公网 API 地址</label>
+                  <input id="publicApiBaseUrlInput" placeholder="https://api.example.com" />
+                </div>
+              </div>
+              <div class="actions" style="margin-top: 14px">
+                <button class="primary" type="button" data-admin-action="save-settings">
+                  <i data-lucide="save" size="16"></i>保存设置
+                </button>
+              </div>
+              <p class="note" style="margin-top: 14px">
+                填写供应商可以访问的后端公网地址，例如 https://api.example.com。不要填写 localhost、127.0.0.1 或内网 IP。
+              </p>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" data-generated-code-modal hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="generatedCodeModalTitle">
+        <div class="modal-header">
+          <div>
+            <h2 id="generatedCodeModalTitle">本次生成兑换码</h2>
+            <span class="tiny" id="generatedCodeModalCount">0 个兑换码</span>
+          </div>
+          <button class="mini-btn" type="button" data-close-generated-code-modal>
+            <i data-lucide="x" size="16"></i>关闭
+          </button>
+        </div>
+        <div class="modal-body">
+          <textarea id="generatedCodeModalList" readonly></textarea>
+          <div class="actions">
+            <button class="primary" type="button" data-copy-generated-modal-codes>
+              <i data-lucide="copy" size="16"></i>复制全部兑换码
+            </button>
+            <button class="ghost" type="button" data-close-generated-code-modal>完成</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="center-notice" role="alertdialog" aria-modal="true" aria-live="assertive">
+      <div class="notice-dialog">
+        <div class="notice-icon"><i data-lucide="check" size="22"></i></div>
+        <strong data-center-title>提示</strong>
+        <p data-center-message></p>
+        <button class="notice-close" type="button" data-close-center-notice>知道了</button>
+      </div>
+    </div>
+
+    <script>
+      const centerNotice = document.querySelector(".center-notice");
+      const DEFAULT_API_BASE =
+        window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+          ? "http://127.0.0.1:4000"
+          : window.location.origin;
+      const API_BASE = localStorage.getItem("apiBase") || DEFAULT_API_BASE;
+      const AUTH_PAGE = "auth.html";
+      let toastTimer;
+      function showToast(message) {
+        showCenterNotice("提示", message);
+      }
+
+      function showCenterNotice(title, message, type = "success") {
+        centerNotice.classList.toggle("error", type === "error");
+        centerNotice.querySelector("[data-center-title]").textContent = title;
+        centerNotice.querySelector("[data-center-message]").textContent = message;
+        centerNotice.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => centerNotice.classList.remove("show"), 2200);
+      }
+
+      function apiErrorMessage(data, fallbackStatus) {
+        const messages = {
+          AUTH_REQUIRED: "请先登录后再继续操作",
+          FORBIDDEN: "当前账号没有权限执行此操作",
+          MODEL_ALREADY_EXISTS: "模型已存在，请更换模型名称",
+          MODEL_NOT_FOUND: "模型不存在或已删除",
+          CREDIT_PACKAGE_NOT_FOUND: "积分套餐不存在或已删除",
+          USER_NOT_FOUND: "用户不存在",
+          CREDIT_BALANCE_NEGATIVE: "积分调整后不能小于 0",
+          PROVIDER_URL_INSECURE: "供应商地址必须使用 HTTPS",
+          PROVIDER_URL_PRIVATE: "供应商地址不能指向内网或本机地址",
+          PROVIDER_NOT_CONFIGURED: "视频供应商尚未配置",
+          PROVIDER_UNAVAILABLE: "视频供应商暂时不可用，请稍后重试",
+          VALIDATION_ERROR: "请求参数不正确，请检查后重试"
+        };
+        return data?.message || messages[data?.code] || data?.error || `请求失败：${fallbackStatus}`;
+      }
+
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("已复制到剪贴板");
+        } catch {
+          showToast("当前浏览器不允许直接写入剪贴板");
+        }
+      }
+
+      async function apiFetch(path, options = {}) {
+        const token = localStorage.getItem("authToken");
+        const headers = { ...(options.headers || {}) };
+        if (options.body !== undefined && !headers["Content-Type"]) {
+          headers["Content-Type"] = "application/json";
+        }
+        if (token) headers.authorization = `Bearer ${token}`;
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+        const data = response.status === 204 ? null : await response.json().catch(() => null);
+        if (!response.ok) {
+          const error = new Error(apiErrorMessage(data, response.status));
+          error.code = data?.code;
+          error.statusCode = data?.statusCode || response.status;
+          error.details = data?.details;
+          throw error;
+        }
+        return data;
+      }
+
+      let adminModels = [];
+      let adminPackages = [];
+      let adminUsers = [];
+      let adminRedemptionCodes = [];
+      let systemSettings = {};
+      let generatedCodes = [];
+      let providerModels = [];
+      let providerBaseUrl = "";
+      let selectedModelId = "";
+      let selectedPackageId = "";
+      let redemptionCurrentPage = 1;
+      const REDEMPTION_PAGE_SIZE = 10;
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "--";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "--";
+        return date.toLocaleString("zh-CN", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function statusLabel(status) {
+        const labels = {
+          ACTIVE: "正常",
+          BANNED: "封禁",
+          PENDING: "排队中",
+          RUNNING: "生成中",
+          SUCCEEDED: "完成",
+          FAILED: "失败"
+        };
+        return labels[status] || status || "--";
+      }
+
+      function formatGenerationDuration(seconds) {
+        if (seconds === null || seconds === undefined) return "--";
+        const numericSeconds = Number(seconds);
+        if (!Number.isFinite(numericSeconds)) return "--";
+        return `${Math.max(0, Math.round(numericSeconds))} 秒`;
+      }
+
+      function formatMediaCounts(job) {
+        return [
+          Number(job.imageCount || 0) > 0 ? `图片 ${job.imageCount}` : "",
+          Number(job.videoCount || 0) > 0 ? `视频 ${job.videoCount}` : "",
+          Number(job.audioCount || 0) > 0 ? `音频 ${job.audioCount}` : ""
+        ]
+          .filter(Boolean)
+          .join(" / ") || "无";
+      }
+
+      function formatValidityDays(days) {
+        if (days === null || days === undefined) return "永久";
+        const numericDays = Number(days);
+        if (!Number.isFinite(numericDays)) return "--";
+        return `${Math.max(0, Math.ceil(numericDays))} 天`;
+      }
+
+      function formatCodeValidity(code) {
+        if (code.validityDays !== null && code.validityDays !== undefined) {
+          return formatValidityDays(code.validityDays);
+        }
+        if (code.expiresAt) return "待兑换";
+        return "永久";
+      }
+
+      function redemptionStatusLabel(status) {
+        const labels = {
+          ACTIVE: "未使用",
+          REDEEMED: "已兑换",
+          VOID: "已作废",
+          EXPIRED: "已过期"
+        };
+        return labels[status] || status || "--";
+      }
+
+      function renderAdminModels(models) {
+        adminModels = Array.isArray(models) ? models : [];
+        const rows = document.querySelector("[data-model-rows]");
+        if (!rows) return;
+        if (!adminModels.length) {
+          rows.innerHTML = '<tr><td colspan="4">暂无模型配置。</td></tr>';
+          return;
+        }
+        rows.innerHTML = adminModels
+          .map((model) => `
+            <tr data-model-id="${escapeHtml(model.id)}">
+              <td>${escapeHtml(model.displayName)}<br /><span class="tiny">${escapeHtml(model.modelName)} / Key ****${escapeHtml(model.apiKeyLast4)}</span></td>
+              <td>${escapeHtml(model.costCredits)}</td>
+              <td class="${model.enabled ? "status-ok" : "status-ban"}">${model.enabled ? "启用" : "禁用"}</td>
+              <td class="actions">
+                <button class="mini-btn" type="button" data-admin-action="edit-model" data-id="${escapeHtml(model.id)}">编辑</button>
+                <button class="mini-btn" type="button" data-admin-action="toggle-model" data-id="${escapeHtml(model.id)}">${model.enabled ? "禁用" : "启用"}</button>
+                <button class="mini-btn danger" type="button" data-admin-action="delete-model" data-id="${escapeHtml(model.id)}">删除</button>
+              </td>
+            </tr>
+          `)
+          .join("");
+        lucide.createIcons();
+      }
+
+      function renderProviderModelOptions(models = providerModels, selectedValue = "") {
+        const select = document.querySelector("#modelNameInput");
+        if (!select) return;
+        const selected = selectedValue || select.value;
+        if (!models.length) {
+          select.innerHTML = '<option value="">暂无供应商模型</option>';
+          return;
+        }
+        select.innerHTML = [
+          '<option value="">请选择供应商模型</option>',
+          ...models.map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.id)}</option>`)
+        ].join("");
+        if (selected && models.some((model) => model.id === selected)) {
+          select.value = selected;
+        }
+      }
+
+      async function loadProviderModels() {
+        try {
+          const result = await apiFetch("/api/admin/provider-models");
+          providerModels = Array.isArray(result?.models) ? result.models : [];
+          providerBaseUrl = result?.baseUrl || "";
+          renderProviderModelOptions(providerModels);
+        } catch (error) {
+          providerModels = [];
+          const select = document.querySelector("#modelNameInput");
+          if (select) {
+            select.innerHTML = '<option value="">从供应商读取模型名称失败</option>';
+          }
+          showToast(error instanceof Error ? error.message : "从供应商读取模型名称失败");
+        }
+      }
+
+      function renderAdminPackages(packages) {
+        adminPackages = Array.isArray(packages) ? packages : [];
+        const rows = document.querySelector("[data-package-rows]");
+        if (!rows) return;
+        if (!adminPackages.length) {
+          rows.innerHTML = '<tr><td colspan="6">暂无积分套餐。</td></tr>';
+          return;
+        }
+        rows.innerHTML = adminPackages
+          .map((pkg) => `
+            <tr data-package-id="${escapeHtml(pkg.id)}">
+              <td>${escapeHtml(pkg.name)}</td>
+              <td>${escapeHtml((Number(pkg.priceCents || 0) / 100).toFixed(2))} 元</td>
+              <td>${escapeHtml(pkg.credits)}</td>
+              <td>${escapeHtml(pkg.validDays)} 天</td>
+              <td class="${pkg.enabled ? "status-ok" : "status-ban"}">${pkg.enabled ? "启用" : "禁用"}<br /><span class="tiny">${pkg.purchaseUrl ? `购买链接：${escapeHtml(pkg.purchaseUrl)}` : "未配置购买链接"}</span></td>
+              <td class="actions">
+                <button class="mini-btn" type="button" data-admin-action="edit-package" data-id="${escapeHtml(pkg.id)}">编辑</button>
+                <button class="mini-btn" type="button" data-admin-action="toggle-package" data-id="${escapeHtml(pkg.id)}">${pkg.enabled ? "禁用" : "启用"}</button>
+                <button class="mini-btn danger" type="button" data-admin-action="delete-package" data-id="${escapeHtml(pkg.id)}">删除</button>
+              </td>
+            </tr>
+          `)
+          .join("");
+      }
+
+      function renderAdminUsers(users) {
+        adminUsers = Array.isArray(users) ? users : [];
+        const rows = document.querySelector("[data-user-rows]");
+        document.querySelector("[data-user-total]").textContent = String(adminUsers.length);
+        document.querySelector("[data-user-active]").textContent = String(adminUsers.filter((user) => user.status === "ACTIVE").length);
+        document.querySelector("[data-user-banned]").textContent = String(adminUsers.filter((user) => user.status === "BANNED").length);
+        if (!rows) return;
+        if (!adminUsers.length) {
+          rows.innerHTML = '<tr><td colspan="6">暂无用户。</td></tr>';
+          return;
+        }
+        rows.innerHTML = adminUsers
+          .map((user) => `
+            <tr data-user-id="${escapeHtml(user.id)}">
+              <td>${escapeHtml(user.email)}</td>
+              <td>${escapeHtml(formatDateTime(user.createdAt))}</td>
+              <td>${escapeHtml(user.creditBalance)}</td>
+              <td>${escapeHtml(user.purchasedPackageName || "--")}</td>
+              <td class="${user.status === "ACTIVE" ? "status-ok" : "status-ban"}">${escapeHtml(statusLabel(user.status))}</td>
+              <td>
+                <div class="actions">
+                  <button class="mini-btn" type="button" data-admin-action="adjust-user-credits" data-id="${escapeHtml(user.id)}">改积分</button>
+                  <button class="mini-btn ${user.status === "ACTIVE" ? "danger" : ""}" type="button" data-admin-action="toggle-user-status" data-id="${escapeHtml(user.id)}">${user.status === "ACTIVE" ? "封禁" : "解封"}</button>
+                </div>
+              </td>
+            </tr>
+          `)
+          .join("");
+      }
+
+      function renderAdminVideoJobs(jobs) {
+        const rows = document.querySelector("[data-record-rows]");
+        if (!rows) return;
+        const videoJobs = Array.isArray(jobs) ? jobs : [];
+        if (!videoJobs.length) {
+          rows.innerHTML = '<tr><td colspan="11">暂无视频记录。</td></tr>';
+          return;
+        }
+        rows.innerHTML = videoJobs
+          .map((job) => `
+            <tr data-job-id="${escapeHtml(job.id)}">
+              <td>${escapeHtml(job.userEmail || job.userId)}</td>
+              <td>${escapeHtml(job.modelName || job.modelProviderName || "--")}</td>
+              <td>${escapeHtml(job.prompt || "--")}</td>
+              <td>${escapeHtml(job.size || job.aspectRatio || "--")}</td>
+              <td>${escapeHtml(job.resolution || "--")}</td>
+              <td>${escapeHtml(job.durationSeconds ?? "--")} 秒</td>
+              <td>${escapeHtml(formatMediaCounts(job))}</td>
+              <td>${escapeHtml(formatDateTime(job.generatedAt || job.createdAt))}</td>
+              <td>${escapeHtml(formatGenerationDuration(job.generationDurationSeconds))}</td>
+              <td class="${job.status === "FAILED" ? "status-ban" : "status-ok"}">${escapeHtml(statusLabel(job.status))}</td>
+              <td class="actions">
+                <button class="mini-btn" type="button" data-admin-action="copy-job" data-id="${escapeHtml(job.id)}"><i data-lucide="copy" size="14"></i>复制</button>
+              </td>
+            </tr>
+          `)
+          .join("");
+        lucide.createIcons();
+      }
+
+      function renderAdminRedemptionCodes(codes) {
+        adminRedemptionCodes = Array.isArray(codes) ? codes : [];
+        const rows = document.querySelector("[data-redemption-code-rows]");
+        const count = document.querySelector("#redemptionCodeCount");
+        if (count) count.textContent = `${adminRedemptionCodes.length} 个兑换码`;
+        if (!rows) return;
+        if (!adminRedemptionCodes.length) {
+          rows.innerHTML = '<tr><td colspan="8">暂无兑换码记录。</td></tr>';
+          renderRedemptionPagination();
+          return;
+        }
+        const totalPages = Math.max(1, Math.ceil(adminRedemptionCodes.length / REDEMPTION_PAGE_SIZE));
+        redemptionCurrentPage = Math.min(Math.max(1, redemptionCurrentPage), totalPages);
+        const pageCodes = adminRedemptionCodes.slice(
+          (redemptionCurrentPage - 1) * REDEMPTION_PAGE_SIZE,
+          redemptionCurrentPage * REDEMPTION_PAGE_SIZE
+        );
+        rows.innerHTML = pageCodes
+          .map((code) => {
+            const fullCode = code.plainCode || `${code.codePrefix || ""}...${code.codeSuffix || ""}`;
+            const redeemedInfo = code.redeemedAt
+              ? `${escapeHtml(formatDateTime(code.redeemedAt))}<br /><span class="tiny">${escapeHtml(code.redeemedByEmail || code.redeemedBy || "--")}</span>`
+              : "未兑换";
+            return `
+              <tr data-redemption-code-id="${escapeHtml(code.id)}">
+                <td data-generated-code>${escapeHtml(fullCode)}</td>
+                <td>${escapeHtml(code.batchName || code.batchId || "--")}</td>
+                <td>${escapeHtml(code.credits)}</td>
+                <td>${escapeHtml(formatCodeValidity(code))}</td>
+                <td class="${code.status === "ACTIVE" ? "status-ok" : "status-ban"}">${escapeHtml(redemptionStatusLabel(code.status))}<br /><span class="tiny">${escapeHtml(code.expiresAt ? `有效期至 ${formatDateTime(code.expiresAt)}` : "永久有效")}</span></td>
+                <td>${escapeHtml(formatDateTime(code.createdAt))}</td>
+                <td>${redeemedInfo}</td>
+                <td class="actions">
+                  <button class="mini-btn" type="button" data-copy-code><i data-lucide="copy" size="14"></i>复制</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+        renderRedemptionPagination();
+        lucide.createIcons();
+      }
+
+      function renderRedemptionPagination() {
+        const pagination = document.querySelector("[data-redemption-pagination]");
+        if (!pagination) return;
+        const totalPages = Math.max(1, Math.ceil(adminRedemptionCodes.length / REDEMPTION_PAGE_SIZE));
+        if (!adminRedemptionCodes.length) {
+          pagination.innerHTML = '<span>第 0 / 0 页</span>';
+          return;
+        }
+        pagination.innerHTML = `
+          <button class="mini-btn" type="button" data-redemption-page="prev" ${redemptionCurrentPage <= 1 ? "disabled" : ""}>上一页</button>
+          <span>第 ${redemptionCurrentPage} / ${totalPages} 页</span>
+          <button class="mini-btn" type="button" data-redemption-page="next" ${redemptionCurrentPage >= totalPages ? "disabled" : ""}>下一页</button>
+        `;
+      }
+
+      function auditActionLabel(action) {
+        const labels = {
+          MODEL_CONFIG_CREATED: "新增模型",
+          MODEL_CONFIG_UPDATED: "更新模型",
+          MODEL_CONFIG_DELETED: "删除模型",
+          CREDIT_PACKAGE_CREATED: "新增套餐",
+          CREDIT_PACKAGE_UPDATED: "更新套餐",
+          CREDIT_PACKAGE_DELETED: "删除套餐",
+          REDEMPTION_BATCH_CREATED: "生成兑换码",
+          USER_BANNED: "封禁用户",
+          USER_UNBANNED: "解封用户",
+          USER_CREDITS_ADJUSTED: "调整积分",
+          USER_UPDATED: "更新用户"
+        };
+        return labels[action] || action || "--";
+      }
+
+      function auditMetadataSummary(metadata) {
+        if (!metadata || typeof metadata !== "object") return "--";
+        const parts = [];
+        if (metadata.name) parts.push(String(metadata.name));
+        if (metadata.after?.name) parts.push(String(metadata.after.name));
+        if (metadata.after?.modelName) parts.push(String(metadata.after.modelName));
+        if (metadata.quantity !== undefined) parts.push(`${metadata.quantity} 个`);
+        if (metadata.creditsPerCode !== undefined) parts.push(`${metadata.creditsPerCode} 积分/码`);
+        if (metadata.amount !== undefined) parts.push(`积分 ${metadata.amount > 0 ? "+" : ""}${metadata.amount}`);
+        if (metadata.balanceAfter !== undefined) parts.push(`余额 ${metadata.balanceAfter}`);
+        if (metadata.deletionType) parts.push(metadata.deletionType === "soft" ? "软删除" : "物理删除");
+        if (Array.isArray(metadata.changedFields) && metadata.changedFields.length) {
+          parts.push(`字段 ${metadata.changedFields.join(", ")}`);
+        }
+        return parts.length ? parts.join(" / ") : "--";
+      }
+
+      function renderAdminAuditLogs(logs) {
+        const rows = document.querySelector("[data-audit-log-rows]");
+        if (!rows) return;
+        const auditLogs = Array.isArray(logs) ? logs : [];
+        if (!auditLogs.length) {
+          rows.innerHTML = '<tr><td colspan="6">暂无审计日志。</td></tr>';
+          return;
+        }
+        rows.innerHTML = auditLogs
+          .map((log) => `
+            <tr data-audit-log-id="${escapeHtml(log.id)}">
+              <td>${escapeHtml(formatDateTime(log.createdAt))}</td>
+              <td>${escapeHtml(log.actorEmail || log.actorId || "--")}</td>
+              <td>${escapeHtml(auditActionLabel(log.action))}<br /><span class="tiny">${escapeHtml(log.action)}</span></td>
+              <td>${escapeHtml(log.targetType || "--")}<br /><span class="tiny">${escapeHtml(log.targetId || "--")}</span></td>
+              <td>${escapeHtml(auditMetadataSummary(log.metadata))}</td>
+              <td>${escapeHtml(log.ip || "--")}</td>
+            </tr>
+          `)
+          .join("");
+      }
+
+      function renderSystemSettings(settings) {
+        systemSettings = settings || {};
+        const input = document.querySelector("#publicApiBaseUrlInput");
+        if (input) input.value = systemSettings.publicApiBaseUrl || "";
+      }
+
+      async function refreshAdminRedemptionCodes() {
+        renderAdminRedemptionCodes(await apiFetch("/api/admin/redemption-codes"));
+      }
+
+      async function refreshAdminData() {
+        const [models, packages, users, videoJobs, redemptionCodes, auditLogs, settings] = await Promise.all([
+          apiFetch("/api/admin/model-configs"),
+          apiFetch("/api/admin/credit-packages"),
+          apiFetch("/api/admin/users"),
+          apiFetch("/api/admin/video-jobs"),
+          apiFetch("/api/admin/redemption-codes"),
+          apiFetch("/api/admin/audit-logs"),
+          apiFetch("/api/admin/system-settings")
+        ]);
+        await loadProviderModels();
+        renderAdminModels(models);
+        renderAdminPackages(packages);
+        renderAdminUsers(users);
+        renderAdminVideoJobs(videoJobs);
+        renderAdminRedemptionCodes(redemptionCodes);
+        renderAdminAuditLogs(auditLogs);
+        renderSystemSettings(settings);
+      }
+
+      function clearModelForm() {
+        selectedModelId = "";
+        renderProviderModelOptions(providerModels);
+        document.querySelector("#modelDisplayInput").value = "";
+        document.querySelector("#modelBaseUrlInput").value = "";
+        document.querySelector("#modelSubmitPathInput").value = "";
+        document.querySelector("#modelApiKeyInput").value = "";
+        document.querySelector("#modelApiKeyInput").placeholder = "新增时必填，编辑时留空保留原 Key";
+        document.querySelector("#modelAuthTypeInput").value = "BEARER";
+        document.querySelector("#modelCostInput").value = "";
+        document.querySelector("#modelEnabledInput").value = "true";
+      }
+
+      function fillModelForm(model) {
+        selectedModelId = model.id;
+        renderProviderModelOptions(providerModels, model.modelName);
+        if (document.querySelector("#modelNameInput").value !== model.modelName) {
+          document.querySelector("#modelNameInput").innerHTML += `<option value="${escapeHtml(model.modelName)}">${escapeHtml(model.modelName)}</option>`;
+          document.querySelector("#modelNameInput").value = model.modelName;
+        }
+        document.querySelector("#modelDisplayInput").value = model.displayName;
+        document.querySelector("#modelBaseUrlInput").value = model.providerBaseUrl;
+        document.querySelector("#modelSubmitPathInput").value = model.submitPath;
+        document.querySelector("#modelApiKeyInput").value = "";
+        document.querySelector("#modelApiKeyInput").placeholder = `留空则保留 ****${model.apiKeyLast4}`;
+        document.querySelector("#modelAuthTypeInput").value = model.authType;
+        document.querySelector("#modelCostInput").value = String(model.costCredits);
+        document.querySelector("#modelEnabledInput").value = String(model.enabled);
+      }
+
+      async function saveModelConfig() {
+        const isEditing = Boolean(selectedModelId);
+        const apiKey = document.querySelector("#modelApiKeyInput").value.trim();
+        const costCreditsRaw = document.querySelector("#modelCostInput").value;
+        const costCredits = Number(costCreditsRaw);
+        const payload = {
+          modelName: document.querySelector("#modelNameInput").value.trim(),
+          displayName: document.querySelector("#modelDisplayInput").value.trim(),
+          providerBaseUrl: document.querySelector("#modelBaseUrlInput").value.trim(),
+          submitPath: document.querySelector("#modelSubmitPathInput").value.trim(),
+          authType: document.querySelector("#modelAuthTypeInput").value,
+          costCredits,
+          enabled: document.querySelector("#modelEnabledInput").value === "true"
+        };
+        if (!payload.modelName) throw new Error("请填写模型名称");
+        if (!payload.displayName) throw new Error("请填写模型别名");
+        if (!payload.providerBaseUrl) throw new Error("请填写供应商基础 URL");
+        if (!payload.submitPath) throw new Error("请填写提交路径");
+        if (costCreditsRaw === "" || !Number.isInteger(costCredits) || costCredits <= 0) throw new Error("单次消耗积分必须为正整数");
+        if (!isEditing && !apiKey) throw new Error("新增模型时请填写后端密钥 Key");
+        if (apiKey) payload.apiKey = apiKey;
+        await apiFetch(isEditing ? `/api/admin/model-configs/${selectedModelId}` : "/api/admin/model-configs", {
+          method: isEditing ? "PATCH" : "POST",
+          body: JSON.stringify(payload)
+        });
+        showToast(isEditing ? "模型已更新" : "模型已新增");
+        clearModelForm();
+        await refreshAdminData();
+      }
+
+      function clearPackageForm() {
+        selectedPackageId = "";
+        document.querySelector("#packageNameInput").value = "";
+        document.querySelector("#packagePriceInput").value = "";
+        document.querySelector("#packageCreditsInput").value = "";
+        document.querySelector("#packageValidDaysInput").value = "";
+        document.querySelector("#packageSortOrderInput").value = "";
+        document.querySelector("#packagePurchaseUrlInput").value = "";
+        document.querySelector("#packageEnabledInput").value = "true";
+      }
+
+      function fillPackageForm(pkg) {
+        selectedPackageId = pkg.id;
+        document.querySelector("#packageNameInput").value = pkg.name;
+        document.querySelector("#packagePriceInput").value = String(Number(pkg.priceCents || 0) / 100);
+        document.querySelector("#packageCreditsInput").value = String(pkg.credits);
+        document.querySelector("#packageValidDaysInput").value = String(pkg.validDays);
+        document.querySelector("#packageSortOrderInput").value = String(pkg.sortOrder);
+        document.querySelector("#packagePurchaseUrlInput").value = pkg.purchaseUrl || "";
+        document.querySelector("#packageEnabledInput").value = String(pkg.enabled);
+      }
+
+      async function saveCreditPackage() {
+        const isEditing = Boolean(selectedPackageId);
+        const priceRaw = document.querySelector("#packagePriceInput").value;
+        const creditsRaw = document.querySelector("#packageCreditsInput").value;
+        const validDaysRaw = document.querySelector("#packageValidDaysInput").value;
+        const sortOrderRaw = document.querySelector("#packageSortOrderInput").value;
+        const price = Number(priceRaw);
+        const credits = Number(creditsRaw);
+        const validDays = Number(validDaysRaw);
+        const sortOrder = Number(sortOrderRaw);
+        const payload = {
+          name: document.querySelector("#packageNameInput").value.trim(),
+          priceCents: Math.round(price * 100),
+          credits,
+          validDays,
+          sortOrder,
+          purchaseUrl: document.querySelector("#packagePurchaseUrlInput").value.trim(),
+          enabled: document.querySelector("#packageEnabledInput").value === "true"
+        };
+        if (!payload.name) throw new Error("请填写套餐名称");
+        if (priceRaw === "" || !Number.isFinite(price) || price < 0) throw new Error("价格必须为 0 或正数");
+        if (creditsRaw === "" || !Number.isInteger(credits) || credits <= 0) throw new Error("积分数必须为正整数");
+        if (validDaysRaw === "" || !Number.isInteger(validDays) || validDays <= 0) throw new Error("有效期必须为正整数");
+        if (sortOrderRaw === "" || !Number.isInteger(sortOrder)) throw new Error("排序必须为整数");
+        await apiFetch(isEditing ? `/api/admin/credit-packages/${selectedPackageId}` : "/api/admin/credit-packages", {
+          method: isEditing ? "PATCH" : "POST",
+          body: JSON.stringify(payload)
+        });
+        showToast(isEditing ? "套餐已更新" : "套餐已新增");
+        clearPackageForm();
+        await refreshAdminData();
+      }
+
+      async function saveSystemSettings() {
+        const publicApiBaseUrl = document.querySelector("#publicApiBaseUrlInput").value.trim();
+        const result = await apiFetch("/api/admin/system-settings", {
+          method: "PATCH",
+          body: JSON.stringify({ publicApiBaseUrl: publicApiBaseUrl || null })
+        });
+        renderSystemSettings(result);
+        showToast("系统设置已保存");
+      }
+
+      function clearRedemptionForm() {
+        document.querySelector("#redeemBatchName").value = "";
+        document.querySelector("#redeemBatchQuantity").value = "";
+        document.querySelector("#redeemBatchCredits").value = "";
+        document.querySelector("#redeemBatchValidity").value = "permanent";
+        document.querySelector("#redeemBatchValidityDays").value = "";
+        document.querySelector("#redeemBatchExpiresField").hidden = true;
+      }
+
+      function showGeneratedCodeModal(codes) {
+        generatedCodes = Array.isArray(codes) ? codes : [];
+        document.querySelector("#generatedCodeModalList").value = generatedCodes.map((code) => code.plainCode).join("\n");
+        document.querySelector("#generatedCodeModalCount").textContent = `${generatedCodes.length} 个兑换码`;
+        document.querySelector("[data-generated-code-modal]").hidden = false;
+        lucide.createIcons();
+      }
+
+      function closeGeneratedCodeModal() {
+        document.querySelector("[data-generated-code-modal]").hidden = true;
+      }
+
+      function clearWorkbenchForTarget(target) {
+        if (target === "models") clearModelForm();
+        if (target === "plans") clearPackageForm();
+        if (target === "redemption") clearRedemptionForm();
+      }
+
+      function clearAuthAndRedirect() {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUser");
+        window.location.replace(`${AUTH_PAGE}?next=admin.html`);
+      }
+
+      async function requireAdminAccess() {
+        if (!localStorage.getItem("authToken")) {
+          clearAuthAndRedirect();
+          return;
+        }
+        try {
+          const user = await apiFetch("/api/me");
+          if (user.role !== "ADMIN") {
+            window.location.replace("index.html");
+            return;
+          }
+          await refreshAdminData();
+          clearWorkbenchForTarget("models");
+          clearWorkbenchForTarget("plans");
+          clearWorkbenchForTarget("redemption");
+          document.body.classList.add("admin-ready");
+        } catch {
+          clearAuthAndRedirect();
+        }
+      }
+
+      requireAdminAccess();
+
+      document.querySelectorAll("[data-admin-target]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.adminTarget;
+          document.querySelectorAll("[data-admin-target]").forEach((item) => {
+            item.classList.toggle("active", item === button);
+          });
+          document.querySelectorAll(".view").forEach((view) => {
+            view.classList.toggle("active", view.id === `admin-${target}`);
+          });
+          clearWorkbenchForTarget(target);
+        });
+      });
+
+      document.querySelectorAll("select").forEach((select) => {
+        select.addEventListener("change", () => {
+          const label = select.closest(".field")?.querySelector("label")?.textContent || "状态";
+          showToast(`${label}已改为：${select.value}`);
+        });
+      });
+
+      document.querySelector("#redeemBatchValidity")?.addEventListener("change", (event) => {
+        const isCustom = event.target.value === "custom";
+        document.querySelector("#redeemBatchExpiresField").hidden = !isCustom;
+      });
+
+      document.querySelector("#modelNameInput")?.addEventListener("change", (event) => {
+        const modelName = event.target.value;
+        if (!document.querySelector("#modelDisplayInput").value.trim()) {
+          document.querySelector("#modelDisplayInput").value = modelName;
+        }
+        if (providerBaseUrl && !document.querySelector("#modelBaseUrlInput").value.trim()) {
+          document.querySelector("#modelBaseUrlInput").value = providerBaseUrl;
+        }
+        if (!document.querySelector("#modelSubmitPathInput").value.trim()) {
+          document.querySelector("#modelSubmitPathInput").value = "/v1/videos";
+        }
+      });
+
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("button");
+        if (!button || button.dataset.adminTarget) return;
+
+        if (button.hasAttribute("data-close-center-notice")) {
+          centerNotice.classList.remove("show");
+          return;
+        }
+
+        if (button.dataset.redemptionPage) {
+          const totalPages = Math.max(1, Math.ceil(adminRedemptionCodes.length / REDEMPTION_PAGE_SIZE));
+          redemptionCurrentPage += button.dataset.redemptionPage === "next" ? 1 : -1;
+          redemptionCurrentPage = Math.min(Math.max(1, redemptionCurrentPage), totalPages);
+          renderAdminRedemptionCodes(adminRedemptionCodes);
+          return;
+        }
+
+        const action = button.dataset.adminAction;
+        if (action === "save-model") {
+          try {
+            await saveModelConfig();
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "保存模型失败");
+          }
+          return;
+        }
+        if (action === "edit-model") {
+          const model = adminModels.find((item) => item.id === button.dataset.id);
+          if (model) {
+            fillModelForm(model);
+            showToast("已载入模型配置");
+          }
+          return;
+        }
+        if (action === "toggle-model") {
+          const model = adminModels.find((item) => item.id === button.dataset.id);
+          if (!model) return;
+          try {
+            await apiFetch(`/api/admin/model-configs/${model.id}`, {
+              method: "PATCH",
+              body: JSON.stringify({ enabled: !model.enabled })
+            });
+            await refreshAdminData();
+            showToast("模型状态已更新");
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "更新模型状态失败");
+          }
+          return;
+        }
+        if (action === "delete-model") {
+          try {
+            await apiFetch(`/api/admin/model-configs/${button.dataset.id}`, { method: "DELETE" });
+            clearModelForm();
+            await refreshAdminData();
+            showToast("模型已删除");
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "删除模型失败");
+          }
+          return;
+        }
+        if (action === "save-package") {
+          try {
+            await saveCreditPackage();
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "保存套餐失败");
+          }
+          return;
+        }
+        if (action === "save-settings") {
+          try {
+            await saveSystemSettings();
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "保存系统设置失败");
+          }
+          return;
+        }
+        if (action === "edit-package") {
+          const pkg = adminPackages.find((item) => item.id === button.dataset.id);
+          if (pkg) {
+            fillPackageForm(pkg);
+            showToast("已载入套餐配置");
+          }
+          return;
+        }
+        if (action === "toggle-package") {
+          const pkg = adminPackages.find((item) => item.id === button.dataset.id);
+          if (!pkg) return;
+          try {
+            await apiFetch(`/api/admin/credit-packages/${pkg.id}`, {
+              method: "PATCH",
+              body: JSON.stringify({ enabled: !pkg.enabled })
+            });
+            await refreshAdminData();
+            showToast("套餐状态已更新");
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "更新套餐状态失败");
+          }
+          return;
+        }
+        if (action === "delete-package") {
+          try {
+            await apiFetch(`/api/admin/credit-packages/${button.dataset.id}`, { method: "DELETE" });
+            clearPackageForm();
+            await refreshAdminData();
+            showToast("套餐已删除");
+          } catch (error) {
+            showToast(error instanceof Error ? error.message : "删除套餐失败");
+          }
+          return;
+        }
+        if (action === "toggle-user-status") {
+          const user = adminUsers.find((item) => item.id === button.dataset.id);
+          if (!user) return;
+          await apiFetch(`/api/admin/users/${user.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: user.status === "ACTIVE" ? "BANNED" : "ACTIVE" })
+          });
+          await refreshAdminData();
+          showToast("用户状态已更新");
+          return;
+        }
+        if (action === "adjust-user-credits") {
+          const rawAmount = window.prompt("输入积分调整数量，可为负数", "100");
+          if (rawAmount === null) return;
+          const amount = Number(rawAmount);
+          if (!Number.isInteger(amount) || amount === 0) {
+            showToast("请输入非 0 整数");
+            return;
+          }
+          await apiFetch(`/api/admin/users/${button.dataset.id}/adjust-credits`, {
+            method: "POST",
+            body: JSON.stringify({ amount, reason: "ADMIN_UI_ADJUST" })
+          });
+          await refreshAdminData();
+          showToast("用户积分已调整");
+          return;
+        }
+        if (action === "copy-job") {
+          copyText(`视频任务：${button.dataset.id}`);
+          return;
+        }
+
+        if (button.hasAttribute("data-redemption-generate")) {
+          generateRedemptionCodes();
+          return;
+        }
+
+        if (button.hasAttribute("data-copy-generated-modal-codes")) {
+          const codes = generatedCodes.map((code) => code.plainCode).filter(Boolean);
+          if (!codes.length) {
+            showToast("暂无可复制兑换码");
+            return;
+          }
+          copyText(codes.join("\n"));
+          return;
+        }
+
+        if (button.hasAttribute("data-close-generated-code-modal")) {
+          closeGeneratedCodeModal();
+          return;
+        }
+
+        if (button.hasAttribute("data-copy-code")) {
+          const row = button.closest("tr");
+          const codeId = row?.dataset.redemptionCodeId;
+          const code = adminRedemptionCodes.find((item) => item.id === codeId);
+          if (code?.plainCode) {
+            copyText(code.plainCode);
+          } else {
+            showToast("当前兑换码缺少明文，无法复制");
+          }
+          return;
+        }
+
+        const text = button.textContent.trim();
+        if (!text) return;
+
+        if (text.includes("删除")) {
+          const row = button.closest("tr");
+          row?.remove();
+          showToast("已删除当前行");
+          return;
+        }
+
+        if (text.includes("编辑")) {
+          showToast("已载入到左侧操作台，可继续编辑");
+          return;
+        }
+
+        if (text.includes("新增")) {
+          showToast("已进入新增状态，可填写新配置");
+          return;
+        }
+
+        if (text.includes("保存")) {
+          showToast("配置已保存到后台草稿");
+          return;
+        }
+
+        if (text.includes("改密")) {
+          showToast("已打开改密流程占位");
+          return;
+        }
+
+        if (text.includes("改积分")) {
+          showToast("已打开积分调整流程占位");
+          return;
+        }
+
+        if (text.includes("封禁")) {
+          showToast("用户已标记为封禁");
+          return;
+        }
+
+        if (text.includes("解封")) {
+          showToast("用户已恢复正常");
+          return;
+        }
+
+        if (text.includes("播放")) {
+          showToast("播放需要后端视频地址，当前为记录操作占位");
+          return;
+        }
+
+        if (text.includes("下载")) {
+          showToast("下载需要后端返回视频文件地址");
+          return;
+        }
+
+        if (text.includes("复制")) {
+          const rowText = button.closest("tr")?.innerText.trim() || "生成记录";
+          copyText(rowText);
+        }
+      });
+
+      async function generateRedemptionCodes() {
+        if (!localStorage.getItem("authToken")) {
+          showToast("请先用管理员账号登录");
+          return;
+        }
+        const validity = document.querySelector("#redeemBatchValidity").value;
+        const validityDaysRaw = document.querySelector("#redeemBatchValidityDays").value;
+        const name = document.querySelector("#redeemBatchName").value.trim();
+        const quantityRaw = document.querySelector("#redeemBatchQuantity").value;
+        const creditsRaw = document.querySelector("#redeemBatchCredits").value;
+        const quantity = Number(quantityRaw);
+        const creditsPerCode = Number(creditsRaw);
+        const validityDays = Number(validityDaysRaw);
+        if (!name) {
+          showToast("请填写批次名称");
+          return;
+        }
+        if (quantityRaw === "" || !Number.isInteger(quantity) || quantity < 1 || quantity > 5000) {
+          showToast("生成数量必须是 1 到 5000 的整数");
+          return;
+        }
+        if (creditsRaw === "" || !Number.isInteger(creditsPerCode) || creditsPerCode <= 0) {
+          showToast("每个兑换码积分数必须为正整数");
+          return;
+        }
+        if (validity === "custom" && (validityDaysRaw === "" || !Number.isInteger(validityDays) || validityDays <= 0)) {
+          showToast("请输入兑换码有效天数，或切换为永久有效");
+          return;
+        }
+        const payload = {
+          name,
+          quantity,
+          creditsPerCode,
+          expiresAt: validity === "custom" ? expiresAtFromValidityDays(validityDays).toISOString() : null
+        };
+        try {
+          const result = await apiFetch("/api/admin/redemption-batches", {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+          showGeneratedCodeModal(result.codes);
+          await refreshAdminRedemptionCodes();
+          clearRedemptionForm();
+          showToast(`已生成 ${result.codes.length} 个兑换码`);
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : "生成失败");
+        }
+      }
+
+      function expiresAtFromValidityDays(days) {
+        return new Date(Date.now() + days * 86_400_000);
+      }
+
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

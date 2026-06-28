@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>即刻影像 - 登录注册</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      :root {
+        --ink: #17201d;
+        --muted: #68756f;
+        --line: #dce4df;
+        --panel: #ffffff;
+        --wash: #f3f7f4;
+        --brand: #176b5a;
+        --gold: #c3912e;
+        --shadow: 0 18px 60px rgba(23, 40, 34, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(23, 107, 90, 0.08), rgba(195, 145, 46, 0.12)),
+          var(--wash);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Microsoft YaHei", sans-serif;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .page {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .auth-card {
+        width: min(440px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 22px 22px 14px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 8px;
+        color: #101816;
+        background: #f0c45a;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .brand p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 0 22px 18px;
+      }
+
+      .tab {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--ink);
+        background: #f7faf8;
+        cursor: pointer;
+      }
+
+      .tab.active {
+        border-color: rgba(23, 107, 90, 0.45);
+        color: var(--brand);
+        background: #dff1e9;
+      }
+
+      .form {
+        display: none;
+        gap: 14px;
+        padding: 0 22px 22px;
+      }
+
+      .form.active {
+        display: grid;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      input {
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        outline: none;
+      }
+
+      input:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 3px rgba(23, 107, 90, 0.14);
+      }
+
+      .primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px;
+        border: 0;
+        border-radius: 8px;
+        color: #fff;
+        background: var(--brand);
+        cursor: pointer;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .status-box {
+        display: none;
+        margin: 0 22px 16px;
+        padding: 12px;
+        border: 1px solid rgba(23, 107, 90, 0.24);
+        border-radius: 8px;
+        color: var(--brand);
+        background: #edf8f3;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .status-box.show {
+        display: block;
+      }
+
+      .status-box.error {
+        border-color: rgba(201, 79, 69, 0.3);
+        color: #a43d35;
+        background: #fff1ef;
+      }
+
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        color: var(--brand);
+        font-size: 13px;
+        text-decoration: none;
+      }
+
+      .toast {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 10;
+        max-width: min(360px, calc(100vw - 32px));
+        padding: 12px 14px;
+        border: 1px solid rgba(23, 107, 90, 0.2);
+        border-radius: 8px;
+        color: var(--ink);
+        background: #fff;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        transform: translateY(8px);
+        pointer-events: none;
+        transition:
+          opacity 160ms ease,
+          transform 160ms ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="auth-card">
+        <div class="brand">
+          <div class="brand-mark"><i data-lucide="sparkles" size="20"></i></div>
+          <div>
+            <h1>即刻影像</h1>
+            <p>仅支持邮箱登录和邮箱注册</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" type="button" data-auth-tab="login">登录</button>
+          <button class="tab" type="button" data-auth-tab="register">注册</button>
+        </div>
+
+        <div class="status-box" id="authStatus"></div>
+
+        <form class="form active" id="auth-login">
+          <div class="field">
+            <label>邮箱</label>
+            <input type="email" placeholder="name@example.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label>密码</label>
+            <input type="password" placeholder="输入密码" autocomplete="current-password" />
+          </div>
+          <button class="primary" type="button" data-auth-action="login"><i data-lucide="log-in" size="17"></i>登录</button>
+        </form>
+
+        <form class="form" id="auth-register">
+          <div class="field">
+            <label>邮箱</label>
+            <input type="email" placeholder="name@example.com" autocomplete="email" />
+          </div>
+          <div class="field">
+            <label>设置密码</label>
+            <input type="password" placeholder="至少 8 位" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label>确认密码</label>
+            <input type="password" placeholder="再次输入密码" autocomplete="new-password" />
+          </div>
+          <button class="primary" type="button" data-auth-action="register"><i data-lucide="mail-plus" size="17"></i>邮箱注册</button>
+          <p class="hint">原型规则：不需要邮箱验证码即可注册；真实上线前建议增加风控、限频和密码安全校验。</p>
+        </form>
+      </section>
+    </main>
+
+    <div class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      const toast = document.querySelector(".toast");
+      const authStatus = document.querySelector("#authStatus");
+      const DEFAULT_API_BASE =
+        window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+          ? "http://127.0.0.1:4000"
+          : window.location.origin;
+      const API_BASE = localStorage.getItem("apiBase") || DEFAULT_API_BASE;
+      const requestedNext = new URLSearchParams(window.location.search).get("next") || "index.html";
+      const redirectTarget = requestedNext.startsWith("http") || requestedNext.startsWith("//") ? "index.html" : requestedNext;
+      let toastTimer;
+
+      if (localStorage.getItem("authToken")) {
+        window.location.replace(redirectTarget);
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+
+      function showStatus(message, type = "success") {
+        authStatus.textContent = message;
+        authStatus.classList.add("show");
+        authStatus.classList.toggle("error", type === "error");
+      }
+
+      function apiErrorMessage(data, fallbackStatus) {
+        const messages = {
+          INVALID_CREDENTIALS: "邮箱或密码不正确",
+          EMAIL_ALREADY_EXISTS: "该邮箱已注册，请直接登录",
+          USER_BANNED: "账号已被封禁，请联系管理员",
+          INVALID_EMAIL: "邮箱格式不正确",
+          PASSWORD_TOO_SHORT: "密码至少需要 8 位",
+          AUTH_REQUIRED: "请先登录后再继续操作",
+          VALIDATION_ERROR: "请检查输入内容后重试"
+        };
+        return data?.message || messages[data?.code] || data?.error || `请求失败：${fallbackStatus}`;
+      }
+
+      async function apiFetch(path, options = {}) {
+        const headers = { ...(options.headers || {}) };
+        if (options.body !== undefined && !headers["Content-Type"]) {
+          headers["Content-Type"] = "application/json";
+        }
+        const response = await fetch(`${API_BASE}${path}`, {
+          ...options,
+          headers
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+          const error = new Error(apiErrorMessage(data, response.status));
+          error.code = data?.code;
+          error.statusCode = data?.statusCode || response.status;
+          error.details = data?.details;
+          throw error;
+        }
+        return data;
+      }
+
+      document.querySelectorAll("[data-auth-tab]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const target = button.dataset.authTab;
+          document.querySelectorAll("[data-auth-tab]").forEach((item) => {
+            item.classList.toggle("active", item === button);
+          });
+          document.querySelectorAll(".form").forEach((form) => {
+            form.classList.toggle("active", form.id === `auth-${target}`);
+          });
+          showToast(target === "login" ? "已切换到登录" : "已切换到注册");
+        });
+      });
+
+      document.querySelectorAll("[data-auth-action]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const originalHtml = button.innerHTML;
+          const form = button.closest(".form");
+          const email = form.querySelector('input[type="email"]').value.trim();
+          const password = form.querySelector('input[type="password"]').value;
+          button.disabled = true;
+          button.textContent = "处理中...";
+          try {
+            if (!email) {
+              showStatus("请先输入邮箱", "error");
+              showToast("请先输入邮箱");
+              return;
+            }
+            if (!email.includes("@")) {
+              showStatus("邮箱格式需要包含 @", "error");
+              showToast("邮箱格式需要包含 @");
+              return;
+            }
+            if (!password || password.length < 8) {
+              showStatus("密码至少 8 位", "error");
+              showToast("密码至少 8 位");
+              return;
+            }
+            if (button.dataset.authAction === "register") {
+              const passwords = form.querySelectorAll('input[type="password"]');
+              if (passwords[0].value !== passwords[1].value) {
+                showStatus("两次密码输入不一致", "error");
+                showToast("两次密码输入不一致");
+                return;
+              }
+            }
+            const path = button.dataset.authAction === "login" ? "/api/auth/login" : "/api/auth/register";
+            const result = await apiFetch(path, {
+              method: "POST",
+              body: JSON.stringify({ email, password })
+            });
+            localStorage.setItem("authToken", result.token);
+            localStorage.setItem("authUser", JSON.stringify(result.user));
+            const message = button.dataset.authAction === "login"
+              ? "登录成功，正在跳转到视频生成页..."
+              : "注册成功，无需邮箱验证码，正在跳转到视频生成页...";
+            showStatus(message);
+            showToast(message);
+            setTimeout(() => {
+              window.location.href = redirectTarget;
+            }, 900);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : "请求失败";
+            showStatus(message, "error");
+            showToast(message);
+          } finally {
+            button.disabled = false;
+            button.innerHTML = originalHtml;
+            lucide.createIcons();
+          }
+        });
+      });
+
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

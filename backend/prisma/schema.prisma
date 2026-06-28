@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+enum LedgerType {
+  REDEEM_CODE
+  PURCHASE
+  VIDEO_COST
+  ADMIN_ADJUST
+  REFUND
+}
+
+enum BatchStatus {
+  ACTIVE
+  VOID
+}
+
+enum RedemptionCodeStatus {
+  ACTIVE
+  REDEEMED
+  VOID
+  EXPIRED
+}
+
+enum ModelAuthType {
+  BEARER
+  HEADER_KEY
+}
+
+enum VideoMode {
+  TEXT_IMAGE_TO_VIDEO
+  VIDEO_TO_VIDEO
+}
+
+enum VideoJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum AssetType {
+  INPUT_IMAGE
+  INPUT_VIDEO
+  OUTPUT_VIDEO
+}
+
+model User {
+  id                   String               @id @default(uuid()) @db.Uuid
+  email                String               @unique
+  passwordHash         String               @map("password_hash")
+  role                 UserRole             @default(USER)
+  status               UserStatus           @default(ACTIVE)
+  creditBalance        Int                  @default(0) @map("credit_balance")
+  purchasedPackageName String?              @map("purchased_package_name")
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+  creditLedger         CreditLedger[]
+  redemptionCodes      RedemptionCode[]     @relation("RedeemedCodes")
+  redemptionBatches    RedemptionBatch[]    @relation("CreatedBatches")
+  redemptionAttempts   RedemptionAttempt[]
+  videoJobs            VideoJob[]
+  auditLogs            AuditLog[]
+
+  @@map("users")
+}
+
+model CreditLedger {
+  id             String     @id @default(uuid()) @db.Uuid
+  userId         String     @map("user_id") @db.Uuid
+  type           LedgerType
+  amount         Int
+  balanceAfter   Int        @map("balance_after")
+  refType        String?    @map("ref_type")
+  refId          String?    @map("ref_id")
+  idempotencyKey String     @unique @map("idempotency_key")
+  createdBy      String?    @map("created_by") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+  user           User       @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("credit_ledger")
+}
+
+model RedemptionBatch {
+  id             String           @id @default(uuid()) @db.Uuid
+  name           String
+  quantity       Int
+  creditsPerCode Int              @map("credits_per_code")
+  expiresAt      DateTime?        @map("expires_at")
+  status         BatchStatus      @default(ACTIVE)
+  createdBy      String           @map("created_by") @db.Uuid
+  createdAt      DateTime         @default(now()) @map("created_at")
+  creator        User             @relation("CreatedBatches", fields: [createdBy], references: [id])
+  codes          RedemptionCode[]
+
+  @@index([createdAt])
+  @@map("redemption_batches")
+}
+
+model RedemptionCode {
+  id             String               @id @default(uuid()) @db.Uuid
+  batchId        String               @map("batch_id") @db.Uuid
+  codeHash       String               @unique @map("code_hash")
+  codeCiphertext String?              @map("code_ciphertext")
+  codePrefix     String               @map("code_prefix")
+  codeSuffix     String               @map("code_suffix")
+  credits        Int
+  status         RedemptionCodeStatus @default(ACTIVE)
+  expiresAt      DateTime?            @map("expires_at")
+  redeemedBy     String?              @map("redeemed_by") @db.Uuid
+  redeemedAt     DateTime?            @map("redeemed_at")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  batch          RedemptionBatch      @relation(fields: [batchId], references: [id])
+  redeemer       User?                @relation("RedeemedCodes", fields: [redeemedBy], references: [id])
+
+  @@index([batchId])
+  @@index([redeemedBy])
+  @@map("redemption_codes")
+}
+
+model RedemptionAttempt {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  codeHash      String   @map("code_hash")
+  success       Boolean
+  failureReason String?  @map("failure_reason")
+  ip            String?
+  userAgent     String?  @map("user_agent")
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([codeHash])
+  @@map("redemption_attempts")
+}
+
+model CreditPackage {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  priceCents Int      @map("price_cents")
+  credits    Int
+  validDays  Int      @map("valid_days")
+  purchaseUrl String? @map("purchase_url")
+  enabled    Boolean  @default(true)
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("credit_packages")
+}
+
+model ModelConfig {
+  id                    String        @id @default(uuid()) @db.Uuid
+  modelName             String        @unique @map("model_name")
+  displayName           String        @map("display_name")
+  providerBaseUrl       String        @map("provider_base_url")
+  submitPath            String        @map("submit_path")
+  statusPath            String?       @map("status_path")
+  resultPath            String?       @map("result_path")
+  authType              ModelAuthType @map("auth_type")
+  apiKeyCiphertext      String        @map("api_key_ciphertext")
+  apiKeyLast4           String        @map("api_key_last4")
+  secretRef             String?       @map("secret_ref")
+  extraHeadersEncrypted String?       @map("extra_headers_encrypted")
+  keyVersion            Int           @default(1) @map("key_version")
+  costCredits           Int           @map("cost_credits")
+  enabled               Boolean       @default(true)
+  updatedBy             String?       @map("updated_by") @db.Uuid
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  deletedAt             DateTime?     @map("deleted_at")
+  videoJobs             VideoJob[]
+
+  @@map("model_configs")
+}
+
+model VideoJob {
+  id             String         @id @default(uuid()) @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  modelConfigId  String         @map("model_config_id") @db.Uuid
+  mode           VideoMode
+  prompt         String
+  resolution     String
+  aspectRatio    String?        @map("aspect_ratio")
+  durationSeconds Int           @map("duration_seconds")
+  imageCount     Int            @default(0) @map("image_count")
+  videoCount     Int            @default(0) @map("video_count")
+  audioCount     Int            @default(0) @map("audio_count")
+  costCredits    Int            @map("cost_credits")
+  status         VideoJobStatus @default(PENDING)
+  providerTaskId String?        @map("provider_task_id")
+  errorMessage   String?        @map("error_message")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  completedAt    DateTime?      @map("completed_at")
+  user           User           @relation(fields: [userId], references: [id])
+  modelConfig    ModelConfig    @relation(fields: [modelConfigId], references: [id])
+  assets         VideoAsset[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("video_jobs")
+}
+
+model VideoAsset {
+  id         String    @id @default(uuid()) @db.Uuid
+  jobId      String    @map("job_id") @db.Uuid
+  type       AssetType
+  storageKey String    @map("storage_key")
+  mimeType   String    @map("mime_type")
+  sizeBytes  Int       @map("size_bytes")
+  expiresAt  DateTime? @map("expires_at")
+  deletedAt  DateTime? @map("deleted_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  job        VideoJob  @relation(fields: [jobId], references: [id])
+
+  @@index([expiresAt])
+  @@map("video_assets")
+}
+
+model SystemSetting {
+  id               String   @id
+  publicApiBaseUrl String?  @map("public_api_base_url")
+  updatedBy        String?  @map("updated_by") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  metadata   Json?
+  ip         String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  actor      User?    @relation(fields: [actorId], references: [id])
+
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
