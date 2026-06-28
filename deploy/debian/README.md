@@ -115,6 +115,8 @@ sudo nano /etc/ai-video/backend.env
 - `VIDEO_PROVIDER_REAL_JOBS=true`：开启真实供应商任务。
 - `REQUEST_BODY_LIMIT_BYTES=67108864`：允许参考图片等 base64 JSON 上传；Nginx 模板已设置 `client_max_body_size 100m`。
 
+生产环境必须填写 `DATABASE_URL` 并保持 `USE_IN_MEMORY_STORE=false`。如果漏填，后端会拒绝启动；只有显式设置 `USE_IN_MEMORY_STORE=true` 才允许使用会丢数据的内存模式。
+
 可选项：
 
 - `PUBLIC_API_BASE_URL`：供应商抓取参考素材的公网 API 地址兜底值。优先推荐上线后在管理后台“系统设置”填写；后台数据库配置会覆盖该环境变量。
@@ -235,7 +237,7 @@ curl -X POST https://example.com/api/auth/bootstrap-admin \
   -d '{"email":"admin@example.com","password":"REPLACE_ADMIN_PASSWORD","bootstrapSecret":"REPLACE_USE_ONCE_SECRET"}'
 ```
 
-成功后立刻编辑 `/etc/ai-video/backend.env`，删除或注释 `BOOTSTRAP_ADMIN_SECRET`，再重启：
+该接口只用于全新数据库的第一个管理员；数据库里已经存在管理员后，再次调用会返回 `ADMIN_BOOTSTRAP_DISABLED`。成功后立刻编辑 `/etc/ai-video/backend.env`，删除或注释 `BOOTSTRAP_ADMIN_SECRET`，再重启：
 
 ```bash
 sudo nano /etc/ai-video/backend.env
@@ -254,7 +256,7 @@ https://example.com/admin.html
 
 1. 在“系统设置”里填写公网 API 地址，例如 `https://example.com` 或 `https://api.example.com`。这是供应商抓取参考图片/视频/音频时访问的后端 origin，必须公网可访问且 HTTPS 证书有效。
 2. 在“模型配置”里读取供应商模型列表。
-3. 选择供应商真实模型 ID，例如 `video-ds-2.0` 或 `video-ds-2.0-fast`。
+3. 选择或手动输入供应商真实模型 ID，例如 `video-ds-2.0` 或 `video-ds-2.0-fast`。
 4. 填写模型别名，这是用户前台看到的名称。
 5. 填写供应商基础 URL，例如 `https://zz1cc.cc.cd`。
 6. 填写提交路径 `/v1/videos`。
@@ -321,13 +323,15 @@ sudo systemctl start ai-video-api
 
 - `/health` 不通：先看 `systemctl status ai-video-api` 和 `journalctl -u ai-video-api -n 100 --no-pager`。
 - 日志出现 `MODEL_CONFIG_ENCRYPTION_KEY_BASE64 is required`：生产环境变量缺少模型配置加密 Key。
-- 日志出现 `Using non-persistent InMemoryStore`：`DATABASE_URL` 未加载，必须立即修复，否则重启会丢业务数据。
+- 日志出现 `DATABASE_URL is required in production unless USE_IN_MEMORY_STORE=true`：生产数据库连接未加载，必须修复 `/etc/ai-video/backend.env` 里的 `DATABASE_URL`。
+- 日志出现 `Using non-persistent InMemoryStore`：只应出现在显式本地测试或临时模式；生产不要使用，否则重启会丢业务数据。
 - 用户前端没有模型：管理员后台还没有创建并启用模型配置。
 - 真实任务不自动更新：确认 `VIDEO_PROVIDER_REAL_JOBS=true` 且 `REDIS_URL=redis://127.0.0.1:6379`，并检查 Redis 服务。
 - 供应商提交失败：看返回的结构化错误；后端会解析供应商 `code/message`，但不会打印 API Key。
 - 供应商返回 `PUBLIC_API_BASE_URL_REQUIRED`：管理后台“系统设置”未填写公网 API 地址，且环境变量/请求域名也无法推断公网地址。
 - 供应商返回 `PUBLIC_API_BASE_URL_CERT_INVALID`，或原始错误里有 `x509: certificate has expired`：公网 API 地址对应域名 HTTPS 证书过期或不可验证。用 `sudo certbot renew` 续期证书，随后 `sudo systemctl reload nginx`，再用 `curl -Iv https://example.com/health` 检查证书有效期。
 - 上传图片/视频/音频参考后供应商抓取失败：确认“系统设置”的公网 API 地址不是 `localhost`、`127.0.0.1` 或内网 IP；确认 Nginx 已代理 `/api/video/reference-assets/` 到后端；确认 HTTPS 证书有效。
+- 上传后出现 `REQUEST_BODY_TOO_LARGE` 或 `Failed to fetch`：保持 `REQUEST_BODY_LIMIT_BYTES=67108864` 和 Nginx `client_max_body_size 100m`；前端已限制参考视频+参考音频原始文件总大小不超过 36MB，仍失败时压缩素材或减少数量。
 - 视频无法下载：确认 `/var/lib/ai-video/storage/videos` 属主是 `ai-video:ai-video`，并且文件未超过 3 天过期。
 
 ## 15. GitHub 部署与端口冲突补充

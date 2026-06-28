@@ -30,7 +30,7 @@
 - ~~完成新对话轻量接力文档：`docs/context/new-chat-prompt.md`。~~
 - ~~完成真实视频供应商只读连通检查：后端新增 OpenAI Video 兼容适配器和 `npm run provider:smoke`，供应商 `GET /v1/models` 已返回 `video-ds-2.0`、`video-ds-2.0-fast`。~~
 - ~~完成模型 Key 稳定环境变量读取：`MODEL_CONFIG_ENCRYPTION_KEY_BASE64`/`MODEL_CONFIG_ENCRYPTION_KEY_HEX` 必须解码为 32 字节，后端启动不再为模型配置随机生成加密密钥。~~
-- ~~完成管理后台模型名供应商读取：新增 `GET /api/admin/provider-models`，管理后台模型配置里的“模型名称”改为从供应商 `GET /v1/models` 读取的视频模型下拉，当前返回 `video-ds-2.0`、`video-ds-2.0-fast`。~~
+- ~~完成管理后台模型名供应商读取：新增 `GET /api/admin/provider-models`，管理后台模型配置里的“模型名称”会从供应商 `GET /v1/models` 读取视频模型作为输入建议；如果读取失败，管理员仍可手动输入真实模型 ID。~~
 - ~~完成前台模型展示名/供应商模型 ID 分离：用户端模型下拉只展示后台可编辑的 `displayName`，提交生成任务时仍发送供应商模型 ID `modelName`。~~
 - ~~完成文档刷新：`PROJECT.md`、上下文文档、模块文档、架构文档、运行手册和后端 README 已对齐供应商只读连通、模型别名/模型 ID 分离、稳定加密 Key 和下一步真实任务接入。~~
 - ~~完成真实视频任务提交/状态同步代码路径：启用 `VIDEO_PROVIDER_REAL_JOBS=true` 时用户创建任务会提交供应商 `POST /v1/videos`，同步路由调用 `GET /v1/videos/{id}`；成功写入输出资产，失败退款保持幂等；常规测试使用 mocked fetch。~~
@@ -53,7 +53,7 @@
 - ~~完成参考素材提交修复：用户上传参考图/参考视频/参考音频后，创建任务 payload 会带 `images`、`videos`、`audios`，供应商适配器按 OpenAI Video 风格提交给真实供应商。~~
 - ~~完成积分套餐购买 URL 配置：管理后台套餐操作台新增“配置URL”，后端 `credit_packages.purchase_url` 持久化并校验仅允许 HTTP/HTTPS，用户端购买按钮按对应套餐 URL 跳转。~~
 - ~~完成参考图片上传预览：用户上传参考图片后，上传框内显示已选图片缩略图列表和文件名，便于确认素材。~~
-- ~~完成参考素材上传扩展：图片最多 4 张、视频最多 3 个、音频最多 1 个；创建任务 payload 分别提交 `images`、`videos`、`audios`；后端 `/api/video/jobs` 同步校验数量。~~
+- ~~完成参考素材上传扩展：图片最多 4 张、视频最多 3 个、音频最多 1 个；参考视频+参考音频原始文件总大小限制为 36MB；创建任务 payload 分别提交 `images`、`videos`、`audios`；后端 `/api/video/jobs` 同步校验数量。~~
 - ~~修复上传图片后点击生成报 `Failed to fetch`：根因是参考图片 base64 JSON 请求体超过 Fastify 默认约 1MB 限制；后端默认 body limit 调整为 64 MiB，并支持 `REQUEST_BODY_LIMIT_BYTES` 环境变量，超限时返回结构化 413。~~
 - ~~修复多张原图参考素材触发供应商 `fail_to_fetch_task` 风险：前端会把参考图片压缩成长边 1280px 的 JPEG data URL；后端拒绝超大的图片 data URL；失败任务队列卡片展示失败原因摘要。~~
 - ~~修复真实视频生成成功后持续刷新/只播放 2 秒又循环刷新：生成完成并拿到可播放结果后停止重复轮询；只在队列中/生成中状态继续轮询。~~
@@ -83,14 +83,14 @@
 - 真实视频文件默认存储在后端本地目录，可用 `VIDEO_STORAGE_DIR` 覆盖；签名下载地址由后端生成，文件和记录按 3 天保留策略清理。
 - 真实供应商任务状态同步已接入 Redis/BullMQ 后台同步器；`POST /api/video/jobs/:id/sync` 保留为手动兜底，配置调度器时返回排队结果。
 - 项目页当前从 `/api/video/assets` 读取当前用户视频资产；播放按钮在项目卡片内联播放且不弹提示，下载按钮直接下载文件；删除项目视频会删除该资产数据库记录和列表展示，但不删除对应 `video_jobs` 任务记录。生成任务队列没有删除入口。
-- 用户端参考素材上传当前限制：图片最多 4 张并显示缩略图列表，视频最多 3 个，音频最多 1 个；参考图片提交前压缩成长边 1280px 的 JPEG data URL；真实供应商提交按 OpenAI Video 风格传 `images`、`videos`、`audios`。
+- 用户端参考素材上传当前限制：图片最多 4 张并显示缩略图列表，视频最多 3 个，音频最多 1 个；参考视频+参考音频原始文件总大小限制为 36MB；参考图片提交前压缩成长边 1280px 的 JPEG data URL；真实供应商提交按 OpenAI Video 风格传 `images`、`videos`、`audios`。
 - 真实供应商路径不会直接把 data URL 发给供应商：后端会保存参考素材到本地 `references/<jobId>/`，并生成 `/api/video/reference-assets/<jobId>/<filename>` 公网 URL。公网 URL 的 origin 优先使用管理后台“系统设置”的公网 API 地址，其次才回退 `PUBLIC_API_BASE_URL` 或请求域名推断。
 - 公网 API 地址必须是供应商可访问的 HTTP(S) 地址；生产推荐 HTTPS 且证书必须有效。若供应商报 `x509: certificate has expired`，需要续期域名证书并重载 Nginx。
 - 视频生成页轮询规则：有排队/生成中的任务时继续 1.5 秒轮询；生成成功并已渲染可播放视频后停止重复轮询，避免真实视频被不断刷新。
 - 管理后台兑换码页通过 `/api/admin/redemption-codes` 读取所有历史兑换码记录，包含 `validityDays`；页面采用上下布局和分页记录区，新生成批次只在生成成功弹窗里提供“复制全部”，复制内容一行一个完整码。
 - 用户端生成记录页通过 `/api/video/job-records` 展示模型、提示词、分辨率、画幅/尺寸、用户选择的视频时长、媒体上传数量和视频生成时长；不再展示完成时间。
 - 用户端左下角可用积分区域从兑换记录计算有效期倒计时，显示“还剩 N 天”、永久或 `--`。注意 `updateCreditValidity()` 必须能在兑换记录尚未加载时安全执行。
-- 参考素材当前以前端 base64 data URL 放入 JSON 请求体提交，后端默认 `REQUEST_BODY_LIMIT_BYTES=67108864`；Debian Nginx 模板 `client_max_body_size 100m`。
+- 参考素材当前以前端 base64 data URL 放入 JSON 请求体提交，前端限制参考视频+参考音频原始文件总大小不超过 36MB；后端默认 `REQUEST_BODY_LIMIT_BYTES=67108864`；Debian Nginx 模板 `client_max_body_size 100m`。
 - 生产级模型 Key 轮换和旧密文迁移已完成；审计日志后续可补筛选、分页、导出和保留策略；错误提示后续可补更细字段级表单提示。
 - 当前真实供应商提交已验证到供应商业务错误层：历史一次真实 `POST /v1/videos` 返回 `insufficient_user_quota`；后续又发现上传参考素材时供应商会校验公网参考素材 URL 的 HTTPS 证书，证书过期会拒绝抓取。用户已说明额度已充值，并要求后续持续允许真实生成。后续用户反馈真实生成已经能成功生成视频。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 通过；本地已对新增 `system_settings` 执行 `npm run prisma:deploy`；本地 `/health` 正常。历史 `npm run provider:smoke` 只读调用供应商 `GET /v1/models` 通过并返回 `video-ds-2.0`、`video-ds-2.0-fast`。

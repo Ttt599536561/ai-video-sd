@@ -12,6 +12,15 @@ export function requiredEnv(env: EnvLike, name: string, fallback?: string): stri
   return value;
 }
 
+export function shouldUseMemoryStore(env: EnvLike): boolean {
+  if (env.USE_IN_MEMORY_STORE === "true") return true;
+  if (env.DATABASE_URL) return false;
+  if (env.NODE_ENV === "production") {
+    throw new Error("DATABASE_URL is required in production unless USE_IN_MEMORY_STORE=true");
+  }
+  return true;
+}
+
 export function parseModelConfigEncryptionKey(env: EnvLike): Buffer {
   if (env.MODEL_CONFIG_ENCRYPTION_KEY_BASE64) {
     return parseEncodedKey("MODEL_CONFIG_ENCRYPTION_KEY_BASE64", env.MODEL_CONFIG_ENCRYPTION_KEY_BASE64, "base64");

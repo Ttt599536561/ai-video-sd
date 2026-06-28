@@ -28,6 +28,7 @@ export class AppError extends Error {
 const knownErrors: Array<[RegExp, ErrorDefinition]> = [
   [/^Unauthorized$/i, { code: "AUTH_REQUIRED", message: "请先登录后再继续操作", statusCode: 401 }],
   [/^Forbidden$/i, { code: "FORBIDDEN", message: "当前账号没有权限执行此操作", statusCode: 403 }],
+  [/Admin bootstrap is disabled after an admin account exists/i, { code: "ADMIN_BOOTSTRAP_DISABLED", message: "管理员初始化入口已关闭，请使用已有管理员账号登录", statusCode: 400 }],
   [/User is banned/i, { code: "USER_BANNED", message: "账号已被封禁，请联系管理员", statusCode: 403 }],
   [/Invalid email or password/i, { code: "INVALID_CREDENTIALS", message: "邮箱或密码不正确", statusCode: 400 }],
   [/Email already exists/i, { code: "EMAIL_ALREADY_EXISTS", message: "该邮箱已注册，请直接登录", statusCode: 400 }],

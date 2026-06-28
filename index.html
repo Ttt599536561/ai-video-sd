@@ -1754,6 +1754,12 @@
         window.location.replace(`${AUTH_PAGE}?next=index.html`);
       }
 
+      function refreshIcons() {
+        if (window.lucide?.createIcons) {
+          window.lucide.createIcons();
+        }
+      }
+
       function showToast(message) {
         showCenteredToast(message);
       }
@@ -1801,7 +1807,7 @@
         centerNotice.querySelector("[data-center-message]").textContent = message;
         centerNotice.classList.toggle("error", type === "error");
         centerNotice.classList.add("show");
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function readStoredUser() {
@@ -1937,11 +1943,13 @@
       const REFERENCE_UPLOAD_LIMITS = { image: 4, video: 3, audio: 1 };
       const MAX_REFERENCE_IMAGE_EDGE = 1280;
       const REFERENCE_IMAGE_QUALITY = 0.82;
+      const MAX_REFERENCE_MEDIA_TOTAL_BYTES = 36 * 1024 * 1024;
       const completedVideoNotifiedIds = new Set();
       const videoObjectUrls = new Map();
       let selectedReferenceImages = [];
       let selectedReferenceVideos = [];
       let selectedReferenceAudios = [];
+      let selectedReferenceMediaBytes = { video: [], audio: [] };
       let videoStateInitialized = false;
 
       updateUserUI(readStoredUser());
@@ -2015,7 +2023,7 @@
               <p>管理员启用套餐后会显示在这里。</p>
             </article>
           `;
-          lucide.createIcons();
+          refreshIcons();
           return;
         }
         grid.innerHTML = enabledPackages
@@ -2032,7 +2040,7 @@
             `;
           })
           .join("");
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function renderRedemptionRecords(records) {
@@ -2215,7 +2223,7 @@
           }
         }
         scheduleQueueHeightSync();
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function scheduleQueueHeightSync() {
@@ -2275,7 +2283,7 @@
           }
         }
         hydrateProjectVideoCovers(projectVideos);
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function renderVideoRecords(records) {
@@ -2574,6 +2582,23 @@
         if (kind === "audio") selectedReferenceAudios = values;
       }
 
+      function setSelectedReferenceMediaBytes(kind, files) {
+        if (kind !== "video" && kind !== "audio") return;
+        selectedReferenceMediaBytes[kind] = files.map((file) => file.size || 0);
+      }
+
+      function validateReferenceMediaSize(kind, files) {
+        if (kind !== "video" && kind !== "audio") return true;
+        const nextBytes = {
+          ...selectedReferenceMediaBytes,
+          [kind]: files.map((file) => file.size || 0)
+        };
+        const totalBytes = [...nextBytes.video, ...nextBytes.audio].reduce((total, size) => total + size, 0);
+        if (totalBytes <= MAX_REFERENCE_MEDIA_TOTAL_BYTES) return true;
+        showToast("参考视频和音频文件总大小不能超过 36MB，请压缩后重试");
+        return false;
+      }
+
       navButtons.forEach((button) => {
         button.addEventListener("click", () => {
           activateView(button.dataset.viewTarget);
@@ -2603,10 +2628,18 @@
           if (input.files && input.files.length > limit) {
             showToast(`最多支持 ${limit} 个参考素材，已保留前 ${limit} 个`);
           }
+          if (!validateReferenceMediaSize(kind, files)) {
+            input.value = "";
+            label.querySelector(".file-name").textContent = emptyLabel;
+            setSelectedReferenceMedia(kind, []);
+            setSelectedReferenceMediaBytes(kind, []);
+            return;
+          }
           if (files.length) {
             try {
               const dataUrls = await Promise.all(files.map((file) => kind === "image" ? prepareReferenceImage(file) : readFileAsDataUrl(file)));
               setSelectedReferenceMedia(kind, dataUrls);
+              setSelectedReferenceMediaBytes(kind, files);
               if (kind === "image") {
                 updateReferenceImagePreviews(selectedReferenceImages.map((dataUrl, index) => ({
                   dataUrl,
@@ -2619,6 +2652,7 @@
             }
           } else {
             setSelectedReferenceMedia(kind, []);
+            setSelectedReferenceMediaBytes(kind, []);
             if (kind === "image") updateReferenceImagePreviews([]);
           }
           showToast(`已选择：${fileName}`);
@@ -2790,7 +2824,7 @@
 
       void bootstrap();
 
-      lucide.createIcons();
+      refreshIcons();
     </script>
   </body>
 </html>

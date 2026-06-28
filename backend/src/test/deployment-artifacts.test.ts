@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -37,6 +37,37 @@ describe("Debian deployment artifacts", () => {
       if (providerKeyLine) {
         expect(providerKeyLine[1]).toMatch(/^REPLACE_/);
       }
+    }
+  });
+
+  it("keeps docker compose scoped to local dependencies instead of production secrets", () => {
+    const compose = readFileSync(join(root, "backend", "docker-compose.yml"), "utf8");
+
+    expect(compose).toContain("Local development dependencies only");
+    expect(compose).not.toContain("NODE_ENV: production");
+    expect(compose).not.toContain("JWT_SECRET: change-me");
+    expect(compose).not.toContain("REDEMPTION_HASH_SECRET: change-me-too");
+  });
+
+  it("runs the init Prisma migration before incremental migrations on fresh databases", () => {
+    const migrationsDir = join(root, "backend", "prisma", "migrations");
+    const migrationNames = readdirSync(migrationsDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+
+    expect(migrationNames[0]).toContain("_init");
+  });
+
+  it("keeps Prisma migration SQL files free of UTF-8 BOM bytes", () => {
+    const migrationsDir = join(root, "backend", "prisma", "migrations");
+    const migrationNames = readdirSync(migrationsDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+
+    for (const migrationName of migrationNames) {
+      const sql = readFileSync(join(migrationsDir, migrationName, "migration.sql"));
+      expect(Array.from(sql.subarray(0, 3))).not.toEqual([0xef, 0xbb, 0xbf]);
     }
   });
 });

@@ -243,6 +243,15 @@ describe("user frontend shell", () => {
     expect(html).toContain("kind === \"image\" ? prepareReferenceImage(file) : readFileAsDataUrl(file)");
   });
 
+  it("prevents oversized reference video and audio files before building JSON payloads", () => {
+    expect(html).toContain("const MAX_REFERENCE_MEDIA_TOTAL_BYTES = 36 * 1024 * 1024");
+    expect(html).toContain("let selectedReferenceMediaBytes = { video: [], audio: [] };");
+    expect(html).toContain("function validateReferenceMediaSize(kind, files)");
+    expect(html).toContain("selectedReferenceMediaBytes[kind] = files.map((file) => file.size || 0);");
+    expect(html).toContain("if (!validateReferenceMediaSize(kind, files))");
+    expect(html).toContain("setSelectedReferenceMediaBytes(kind, []);");
+  });
+
   it("shows provider failure details on failed video jobs", () => {
     expect(html).toContain("function jobFailureDetail(job)");
     expect(html).toContain("job.errorMessage");

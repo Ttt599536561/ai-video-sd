@@ -19,7 +19,7 @@
 - 管理后台用户列表不显示管理员账号。
 - 模型配置删除采用兼容历史记录的语义：无任务引用则物理删除；已有生成记录引用则软删除并从管理端配置列表和前台模型列表隐藏。
 - 前端公共 `apiFetch` 只有请求带 body 时才自动设置 JSON content-type，空 body 的 GET/DELETE 不带 `Content-Type: application/json`。
-- 管理端模型名称等于真实供应商模型 ID，由只读供应商模型列表加载；模型别名 `displayName` 可编辑，用户前台只展示别名，生成请求仍使用供应商模型 ID。
+- 管理端模型名称等于真实供应商模型 ID，由只读供应商模型列表加载为输入建议；如果供应商列表读取失败，管理员仍可手动输入真实模型 ID。模型别名 `displayName` 可编辑，用户前台只展示别名，生成请求仍使用供应商模型 ID。
 - 模型配置加密主密钥已支持稳定单 Key 和生产版本化 keyring：`MODEL_CONFIG_ENCRYPTION_KEY_BASE64`/`MODEL_CONFIG_ENCRYPTION_KEY_HEX` 兼容旧配置，`MODEL_CONFIG_ENCRYPTION_KEYS` + `MODEL_CONFIG_ENCRYPTION_CURRENT_KEY_VERSION` 用于轮换；模型记录按 `keyVersion` 解密，缺失版本按 1 兼容。
 - 管理后台兑换码页以历史记录为主：管理员可查看所有已生成兑换码记录、完整码和有效期；批量生成成功后只在弹窗展示本次生成兑换码，并在弹窗内复制全部，一行一个。页面采用上下布局，批量生成在上方，全部兑换码记录在下方，记录区固定高度并分页切换。
 - 用户端左下角可用积分区域显示积分有效期倒计时，来自兑换记录；最近到期且未过期的兑换记录显示“还剩 N 天”，永久有效显示“永久”，无可用兑换记录显示 `--`。
@@ -32,10 +32,10 @@
 - 后端框架：Fastify + TypeScript。
 - 测试框架：Vitest。
 - 数据模型：`backend/prisma/schema.prisma`。
-- 当前仓储：`PrismaBackedStore` 默认通过 `DATABASE_URL` 使用 PostgreSQL/Prisma 持久化；未配置 `DATABASE_URL` 时可回退内存仓储。
+- 当前仓储：`PrismaBackedStore` 默认通过 `DATABASE_URL` 使用 PostgreSQL/Prisma 持久化；生产未配置 `DATABASE_URL` 会拒绝启动，只有显式 `USE_IN_MEMORY_STORE=true` 才可回退内存仓储。
 - 本地任务处理：`MockVideoProvider` + `POST /api/video/jobs/:id/process`，成功写入 `OUTPUT_VIDEO` 资产，失败退款。
 - 真实供应商适配器：`OpenAiVideoProvider` 已支持 `GET /v1/models`、`POST /v1/videos`、`GET /v1/videos/{id}` 和 `GET /v1/videos/{id}/content`；非 2xx 响应会解析供应商错误体并输出具体 `code/message`，同时避免泄露 API Key。
-- 参考素材提交契约：图片最多 4 张并传 `images`，视频最多 3 个并传 `videos`，音频最多 1 个并传 `audios`；前端图片上传后显示缩略图列表，后端 `/api/video/jobs` 同步校验数量。
+- 参考素材提交契约：图片最多 4 张并传 `images`，视频最多 3 个并传 `videos`，音频最多 1 个并传 `audios`；前端图片上传后显示缩略图列表，参考视频+参考音频原始文件总大小限制为 36MB，后端 `/api/video/jobs` 同步校验数量。
 - 真实供应商参考素材转换契约：前端提交 data URL 后，后端保存为 `references/<jobId>/` 下的 reference asset，并把 `/api/video/reference-assets/<jobId>/<filename>` 公网 URL 提交给供应商；已有 HTTP(S) URL 原样透传。
 - 真实小流量联调事实：在明确批准下曾提交过 1 次真实 `POST /v1/videos`，供应商返回 `HTTP 403: insufficient_user_quota - 用户额度不足, 剩余额度: ＄35.000000, 最低保留额度: ＄9.000000`；未创建 provider task id 或视频资产。之后用户说明额度已充值，并要求后续点击生成视频持续发起真实请求。
 - 后续用户反馈真实生成已经能成功生成视频；当前仍需观察真实闭环稳定性、同步、下载、本地资产和失败兜底。

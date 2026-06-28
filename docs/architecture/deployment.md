@@ -24,7 +24,8 @@ Debian 12 具体部署材料位于 [deploy/debian/README.md](../../deploy/debian
 - `VIDEO_PROVIDER_BASE_URL` 和 `VIDEO_PROVIDER_API_KEY` 只放后端环境变量；当前已用只读 `GET /v1/models` 验证连通，并执行过真实 `POST /v1/videos` 联调。
 - `VIDEO_PROVIDER_REAL_JOBS=true` 会让用户创建任务真实提交 `POST /v1/videos`；当前本地已启用，后续点击生成会持续真实发起供应商请求。
 - `VIDEO_STORAGE_DIR` 可覆盖本地视频文件目录；目录需要随 3 天保留策略清理，并确认备份或不备份策略。
-- `REQUEST_BODY_LIMIT_BYTES` 控制后端 JSON 请求体上限；当前前端参考素材以 base64 data URL 提交，生产建议显式设置为 `67108864` 并让 Nginx `client_max_body_size` 不小于该值。
+- `DATABASE_URL` 是生产必填项；未配置时后端会拒绝启动，只有显式 `USE_IN_MEMORY_STORE=true` 才允许临时内存模式。
+- `REQUEST_BODY_LIMIT_BYTES` 控制后端 JSON 请求体上限；当前前端参考素材以 base64 data URL 提交，参考视频+参考音频原始文件总大小限制为 36MB，生产建议显式设置为 `67108864` 并让 Nginx `client_max_body_size` 不小于该值。
 - 上线后需要在管理后台“系统设置”填写公网 API 地址，例如 `https://api.example.com` 或同源站点 origin。该值会写入数据库并优先用于供应商抓取参考图片/视频/音频；没有后台配置时才回退 `PUBLIC_API_BASE_URL` 环境变量或请求域名推断。
 - 公网 API 地址必须是供应商可访问的 HTTP(S) origin。生产推荐 HTTPS，且证书必须有效；证书过期会导致供应商返回 `x509: certificate has expired`，后端会映射为 `PUBLIC_API_BASE_URL_CERT_INVALID`。
 - 数据库、Redis、上传目录需要定期备份或明确不备份策略。

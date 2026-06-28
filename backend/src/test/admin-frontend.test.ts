@@ -98,11 +98,14 @@ describe("admin frontend shell", () => {
     expect(html).toContain("pkg.purchaseUrl");
   });
 
-  it("renders supplier model names as a selectable model list", () => {
-    expect(html).toContain('<select id="modelNameInput"');
+  it("renders supplier model names as suggestions while allowing manual model ids", () => {
+    expect(html).toContain('<input id="modelNameInput"');
+    expect(html).toContain('list="providerModelOptions"');
+    expect(html).toContain('<datalist id="providerModelOptions">');
     expect(html).toContain("loadProviderModels");
     expect(html).toContain("renderProviderModelOptions");
     expect(html).toContain("从供应商读取模型名称失败");
+    expect(html).toContain('placeholder="/v1/videos"');
   });
 
   it("starts redemption-code inputs empty", () => {

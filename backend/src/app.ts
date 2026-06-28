@@ -270,6 +270,9 @@ export async function createApp(options: CreateAppOptions) {
     if (body.bootstrapSecret !== options.bootstrapAdminSecret) {
       throw new Error("Forbidden");
     }
+    if (store.users.some((user) => user.role === "ADMIN")) {
+      throw new Error("Admin bootstrap is disabled after an admin account exists");
+    }
     const result = await auth.register({ email: body.email, password: body.password, role: "ADMIN" });
     reply.status(201).send(result);
   });

@@ -261,7 +261,9 @@ REQUEST_BODY_LIMIT_BYTES=67108864
 说明：
 
 - 如果 `4000` 被其他项目占用，把 `PORT=4000` 改成 `PORT=4100`，后续 Nginx 和 systemd 检查也用 `4100`。
+- 生产环境必须填写 `DATABASE_URL` 并保持 `USE_IN_MEMORY_STORE=false`。如果漏填，后端会拒绝启动；不要在生产使用 `USE_IN_MEMORY_STORE=true`，否则重启会丢用户、积分、套餐、兑换码和模型配置。
 - `VIDEO_PROVIDER_API_KEY` 是后台读取供应商模型列表时使用的默认供应商 Key。若你不想把它写在环境变量里，也可以先留空，但后台自动读取模型列表会失败；这种情况下需要在“模型配置”里手动填写真实模型 ID、供应商 URL 和模型 Key。
+- `REQUEST_BODY_LIMIT_BYTES=67108864` 是后端 JSON 请求体上限。前端会把参考图片/视频/音频转成 data URL 提交，其中参考视频+参考音频原始文件总大小已限制为 36MB，避免上线后触发后端或 Nginx body limit。
 - 不要把这些真实值提交到 GitHub。
 
 ## 9. 安装后端依赖并构建
@@ -444,7 +446,7 @@ curl -X POST https://你的域名/api/auth/bootstrap-admin \
   -d '{"email":"你的管理员邮箱","password":"你的管理员密码至少8位","bootstrapSecret":"BOOTSTRAP_ADMIN_SECRET的值"}'
 ```
 
-说明：创建第一个管理员账号。
+说明：创建第一个管理员账号。这个接口只用于全新数据库的第一个管理员；数据库里已经存在管理员后，再次调用会返回 `ADMIN_BOOTSTRAP_DISABLED`，不需要也不能用它重复注册管理员。
 
 创建成功后，立即编辑环境变量文件：
 
@@ -452,7 +454,7 @@ curl -X POST https://你的域名/api/auth/bootstrap-admin \
 sudo nano /etc/ai-video/backend.env
 ```
 
-说明：删除或注释 `BOOTSTRAP_ADMIN_SECRET`，避免重复创建管理员。
+说明：删除或注释 `BOOTSTRAP_ADMIN_SECRET`，避免保留一次性引导密钥。即使忘记删除，后端也会在已有管理员时拒绝再次 bootstrap，但生产仍应移除该密钥。
 
 ```bash
 sudo systemctl restart ai-video-api
@@ -483,6 +485,8 @@ https://你的域名/admin.html
 原因：这些配置保存在本地 PostgreSQL 数据库里，不在 GitHub 代码仓库里。部署到新服务器后，服务器有自己的 PostgreSQL 数据库。
 
 如果你想保留本地配置，需要做数据库迁移/备份恢复。但本地是开发库，通常不建议直接覆盖生产库。
+
+管理员账号也属于数据库数据。全新数据库需要重新创建第一个管理员；如果你恢复了旧数据库且里面已有管理员，就不要再次执行 bootstrap，直接用旧管理员账号登录。
 
 ## 18. 管理后台应该怎么填
 
@@ -526,7 +530,7 @@ https://zz1cc.cc.cd
 BEARER
 ```
 
-模型名选择供应商返回的真实模型 ID，例如：
+模型名选择或输入供应商返回的真实模型 ID，例如：
 
 ```text
 video-ds-2.0
@@ -538,7 +542,7 @@ video-ds-2.0
 video-ds-2.0-fast
 ```
 
-API Key 填供应商给你的 Key。这个 Key 会由后端加密保存到数据库，不会保存在前端。
+如果后台自动读取供应商模型失败，模型名称输入框仍允许手动填写真实模型 ID。API Key 填供应商给你的 Key，这个 Key 会由后端加密保存到数据库，不会保存在前端。
 
 ### 积分套餐
 
@@ -555,6 +559,8 @@ API Key 填供应商给你的 Key。这个 Key 会由后端加密保存到数据
 5. 管理后台系统设置填写公网 API 地址。
 6. 管理后台模型配置填写供应商 URL、模型 ID、Key、积分消耗并启用模型。
 7. 管理后台创建积分套餐，或给测试用户发放积分/兑换码。
+
+环境变量里的 `VIDEO_PROVIDER_BASE_URL` 和 `VIDEO_PROVIDER_API_KEY` 主要用于后台“读取供应商模型列表”和默认供应商连通性；真正用于用户生成任务的是管理后台保存并启用的模型配置。通常部署后需要在管理后台配置模型 URL、模型 ID、Key 和积分消耗。
 
 ## 20. 服务器已有另一个项目怎么办
 
@@ -730,6 +736,26 @@ location /api/ {
     proxy_pass http://127.0.0.1:4000;
 }
 ```
+
+### REQUEST_BODY_TOO_LARGE 或上传后 Failed to fetch
+
+说明：参考素材作为 base64 JSON 上传，体积超过后端或 Nginx 限制时会失败。
+
+检查：
+
+```bash
+grep REQUEST_BODY_LIMIT_BYTES /etc/ai-video/backend.env
+sudo grep client_max_body_size /etc/nginx/sites-available/ai-video
+```
+
+生产推荐保持：
+
+```text
+REQUEST_BODY_LIMIT_BYTES=67108864
+client_max_body_size 100m;
+```
+
+前端已经限制参考视频+参考音频原始文件总大小不超过 36MB；如果仍然失败，请压缩素材或减少参考素材数量。
 
 ### PUBLIC_API_BASE_URL_CERT_INVALID
 

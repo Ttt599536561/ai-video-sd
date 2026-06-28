@@ -61,4 +61,16 @@ describe("server config", () => {
       })
     ).toThrow("MODEL_CONFIG_ENCRYPTION_CURRENT_KEY_VERSION must be a positive integer");
   });
+
+  it("requires DATABASE_URL in production unless memory store is explicitly enabled", () => {
+    const shouldUseMemoryStore = (serverConfig as Record<string, unknown>).shouldUseMemoryStore as (
+      env: Record<string, string | undefined>
+    ) => boolean;
+
+    expect(() => shouldUseMemoryStore({ NODE_ENV: "production" })).toThrow(
+      "DATABASE_URL is required in production unless USE_IN_MEMORY_STORE=true"
+    );
+    expect(shouldUseMemoryStore({ NODE_ENV: "production", USE_IN_MEMORY_STORE: "true" })).toBe(true);
+    expect(shouldUseMemoryStore({ NODE_ENV: "production", DATABASE_URL: "postgresql://example" })).toBe(false);
+  });
 });

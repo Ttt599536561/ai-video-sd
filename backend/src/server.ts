@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { createApp } from "./app.js";
 import { InMemoryStore } from "./repositories/memory-store.js";
 import { createPrismaClient, disconnectPrisma, PrismaBackedStore } from "./repositories/prisma-store.js";
-import { parseModelConfigEncryptionKeyring, requiredEnv } from "./server-config.js";
+import { parseModelConfigEncryptionKeyring, requiredEnv, shouldUseMemoryStore } from "./server-config.js";
 import { decryptSecret } from "./services/crypto.service.js";
 import { OpenAiVideoProvider } from "./services/openai-video-provider.js";
 import { VideoFileStorage } from "./services/video-file-storage.js";
@@ -12,7 +12,7 @@ import { VideoService } from "./services/video.service.js";
 
 const port = Number(process.env.PORT ?? 4000);
 const bodyLimitBytes = Number(process.env.REQUEST_BODY_LIMIT_BYTES ?? 64 * 1024 * 1024);
-const useMemoryStore = process.env.USE_IN_MEMORY_STORE === "true" || !process.env.DATABASE_URL;
+const useMemoryStore = shouldUseMemoryStore(process.env);
 const prisma = useMemoryStore ? undefined : createPrismaClient();
 const store = prisma ? await PrismaBackedStore.create(prisma) : new InMemoryStore();
 const jwtSecret = requiredEnv(process.env, "JWT_SECRET", "dev-jwt-secret");

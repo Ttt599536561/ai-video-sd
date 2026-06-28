@@ -1,4 +1,6 @@
 services:
+  # Local development dependencies only. Production Debian deployment uses
+  # systemd + /etc/ai-video/backend.env, not this compose file.
   postgres:
     image: postgres:17-alpine
     environment:
@@ -14,22 +16,6 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-
-  api:
-    build: .
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      NODE_ENV: production
-      PORT: 4000
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ai_video
-      JWT_SECRET: change-me
-      REDEMPTION_HASH_SECRET: change-me-too
-      REDIS_URL: redis://redis:6379
-    ports:
-      - "4000:4000"
-    command: ["npm", "start"]
 
 volumes:
   postgres_data:

@@ -99,6 +99,27 @@ describe("HTTP API", () => {
     expect(created.json().user.role).toBe("ADMIN");
   });
 
+  it("disables admin bootstrap after an admin account exists", async () => {
+    const store = new InMemoryStore();
+    const app = await createApp({
+      store,
+      jwtSecret: "test",
+      redemptionHashSecret: "hash",
+      bootstrapAdminSecret: "bootstrap-secret"
+    });
+    const auth = new AuthService(store, { jwtSecret: "test" });
+    await auth.register({ email: "existing-admin@example.com", password: "password123", role: "ADMIN" });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/auth/bootstrap-admin",
+      payload: { email: "second-admin@example.com", password: "password123", bootstrapSecret: "bootstrap-secret" }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().code).toBe("ADMIN_BOOTSTRAP_DISABLED");
+  });
+
   it("allows admins to manage the public API base URL setting", async () => {
     const store = new InMemoryStore();
     const app = await createApp({ store, jwtSecret: "test", redemptionHashSecret: "hash" });

@@ -10,11 +10,12 @@
 - 后端在 backend/，技术栈是 Fastify + TypeScript + Prisma + PostgreSQL + Redis/BullMQ。
 - 后端启动入口是 backend/dist/server.js，构建命令是：cd backend && npm ci && npm run prisma:generate && npm run build。
 - 数据库迁移命令是：cd backend && npm run prisma:deploy。
-- 生产必须设置 DATABASE_URL，否则后端会回退 InMemoryStore 并在重启后丢数据。
+- 生产必须设置 DATABASE_URL，否则后端会拒绝启动；只有显式 USE_IN_MEMORY_STORE=true 才允许使用会丢数据的内存模式。
 - 生产必须设置 MODEL_CONFIG_ENCRYPTION_KEY_BASE64，值必须是 openssl rand -base64 32 生成的 32 字节 Key。
 - 真实视频任务需要 VIDEO_PROVIDER_REAL_JOBS=true 和 REDIS_URL。
 - 供应商 Key 只能放在 /etc/ai-video/backend.env 或管理员后台加密字段，绝不能写入前端文件、README、Nginx 配置、聊天输出或 Git。
 - 供应商抓取参考素材需要公网 API 地址；上线后优先在管理员后台“系统设置”填写 https://域名 或 https://api.域名。该域名必须公网可访问且 HTTPS 证书有效。
+- 参考视频和参考音频会以 base64 JSON 提交，前端已限制二者原始文件总大小不超过 36MB；后端 REQUEST_BODY_LIMIT_BYTES 建议保持 67108864，Nginx client_max_body_size 保持 100m。
 - 用户视频文件默认保留 3 天，生产 VIDEO_STORAGE_DIR 建议为 /var/lib/ai-video/storage/videos。
 - 前端生产环境默认使用同源 API，即 https://域名/api/...；Nginx 必须把 /api/ 反代到 127.0.0.1:4000。
 
@@ -44,8 +45,8 @@
 12. 复制 deploy/debian/nginx-ai-video.conf 到 /etc/nginx/sites-available/ai-video，替换 server_name，启用 sites-enabled，nginx -t，reload。
 13. 用 certbot --nginx -d 域名 签发 HTTPS。若 DNS 未生效，先只完成 HTTP 并说明等待 DNS。
 14. 检查 curl http://127.0.0.1:4000/health 和 curl https://域名/health。
-15. 创建第一个管理员：调用 POST https://域名/api/auth/bootstrap-admin。成功后必须删除或注释 BOOTSTRAP_ADMIN_SECRET 并重启 ai-video-api。
-16. 提醒用户登录 https://域名/admin.html 初始化系统设置、模型配置、积分套餐和兑换码。系统设置中公网 API 地址填 https://域名；模型配置中 submitPath 填 /v1/videos，authType 选 BEARER。
+15. 创建第一个管理员：调用 POST https://域名/api/auth/bootstrap-admin。该接口只用于全新数据库的第一个管理员；已有管理员时会返回 ADMIN_BOOTSTRAP_DISABLED。成功后必须删除或注释 BOOTSTRAP_ADMIN_SECRET 并重启 ai-video-api。
+16. 提醒用户登录 https://域名/admin.html 初始化系统设置、模型配置、积分套餐和兑换码。系统设置中公网 API 地址填 https://域名；模型配置中模型名称可从供应商列表选择，也可在列表读取失败时手动输入真实模型 ID；submitPath 填 /v1/videos，authType 选 BEARER。
 17. 如果从 GitHub 部署，仓库地址是 https://github.com/Ttt599536561/ai-video-sd.git。优先参考 docs/operations/debian-12-github-deployment-guide.md；不要把本地 backend/.env、日志、node_modules、backend/storage 或 backend/dist 上传到服务器或 GitHub。
 18. 如果服务器已有其他项目，先用 sudo ss -lntp 检查端口；本项目默认后端端口是 4000，冲突时改用 4100，并同步修改 /etc/ai-video/backend.env 与 Nginx proxy_pass。
 

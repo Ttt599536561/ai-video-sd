@@ -569,9 +569,10 @@
                 <div class="form-grid">
                   <div class="field">
                     <label>模型名称</label>
-                    <select id="modelNameInput">
-                      <option value="">正在从供应商读取模型...</option>
-                    </select>
+                    <input id="modelNameInput" list="providerModelOptions" placeholder="例如 video-ds-2.0" />
+                    <datalist id="providerModelOptions">
+                      <option value="正在从供应商读取模型..."></option>
+                    </datalist>
                   </div>
                   <div class="field">
                     <label>模型别名</label>
@@ -583,7 +584,7 @@
                   </div>
                   <div class="field">
                     <label>提交路径</label>
-                    <input id="modelSubmitPathInput" class="secret" placeholder="/v1/video/generate" />
+                    <input id="modelSubmitPathInput" class="secret" placeholder="/v1/videos" />
                   </div>
                   <div class="field">
                     <label>后端密钥 Key</label>
@@ -1091,6 +1092,12 @@
         }
       }
 
+      function refreshIcons() {
+        if (window.lucide?.createIcons) {
+          window.lucide.createIcons();
+        }
+      }
+
       async function apiFetch(path, options = {}) {
         const token = localStorage.getItem("authToken");
         const headers = { ...(options.headers || {}) };
@@ -1220,24 +1227,23 @@
             </tr>
           `)
           .join("");
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function renderProviderModelOptions(models = providerModels, selectedValue = "") {
-        const select = document.querySelector("#modelNameInput");
-        if (!select) return;
-        const selected = selectedValue || select.value;
+        const input = document.querySelector("#modelNameInput");
+        const list = document.querySelector("#providerModelOptions");
+        if (!input || !list) return;
+        const selected = selectedValue || input.value;
         if (!models.length) {
-          select.innerHTML = '<option value="">暂无供应商模型</option>';
+          list.innerHTML = "";
+          if (selectedValue) input.value = selectedValue;
           return;
         }
-        select.innerHTML = [
-          '<option value="">请选择供应商模型</option>',
-          ...models.map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.id)}</option>`)
-        ].join("");
-        if (selected && models.some((model) => model.id === selected)) {
-          select.value = selected;
-        }
+        list.innerHTML = models
+          .map((model) => `<option value="${escapeHtml(model.id)}"></option>`)
+          .join("");
+        if (selected) input.value = selected;
       }
 
       async function loadProviderModels() {
@@ -1248,10 +1254,7 @@
           renderProviderModelOptions(providerModels);
         } catch (error) {
           providerModels = [];
-          const select = document.querySelector("#modelNameInput");
-          if (select) {
-            select.innerHTML = '<option value="">从供应商读取模型名称失败</option>';
-          }
+          renderProviderModelOptions([]);
           showToast(error instanceof Error ? error.message : "从供应商读取模型名称失败");
         }
       }
@@ -1339,7 +1342,7 @@
             </tr>
           `)
           .join("");
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function renderAdminRedemptionCodes(codes) {
@@ -1382,7 +1385,7 @@
           })
           .join("");
         renderRedemptionPagination();
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function renderRedemptionPagination() {
@@ -1502,10 +1505,7 @@
       function fillModelForm(model) {
         selectedModelId = model.id;
         renderProviderModelOptions(providerModels, model.modelName);
-        if (document.querySelector("#modelNameInput").value !== model.modelName) {
-          document.querySelector("#modelNameInput").innerHTML += `<option value="${escapeHtml(model.modelName)}">${escapeHtml(model.modelName)}</option>`;
-          document.querySelector("#modelNameInput").value = model.modelName;
-        }
+        document.querySelector("#modelNameInput").value = model.modelName;
         document.querySelector("#modelDisplayInput").value = model.displayName;
         document.querySelector("#modelBaseUrlInput").value = model.providerBaseUrl;
         document.querySelector("#modelSubmitPathInput").value = model.submitPath;
@@ -1625,7 +1625,7 @@
         document.querySelector("#generatedCodeModalList").value = generatedCodes.map((code) => code.plainCode).join("\n");
         document.querySelector("#generatedCodeModalCount").textContent = `${generatedCodes.length} 个兑换码`;
         document.querySelector("[data-generated-code-modal]").hidden = false;
-        lucide.createIcons();
+        refreshIcons();
       }
 
       function closeGeneratedCodeModal() {
@@ -1993,7 +1993,7 @@
         return new Date(Date.now() + days * 86_400_000);
       }
 
-      lucide.createIcons();
+      refreshIcons();
     </script>
   </body>
 </html>

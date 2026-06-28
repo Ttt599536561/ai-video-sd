@@ -41,7 +41,7 @@
 - 前端 `apiFetch` 只有有 body 时才设置 JSON content-type，空 body 的 DELETE 不带 `Content-Type: application/json`。
 - CORS 已允许 `GET,HEAD,POST,PATCH,DELETE`。
 - 模型配置加密 Key 已支持稳定单 Key 和生产版本化 keyring：`MODEL_CONFIG_ENCRYPTION_KEY_BASE64`/`MODEL_CONFIG_ENCRYPTION_KEY_HEX` 兼容旧配置，`MODEL_CONFIG_ENCRYPTION_KEYS` + `MODEL_CONFIG_ENCRYPTION_CURRENT_KEY_VERSION` 用于轮换；旧密文按记录 `keyVersion` 解密，缺失版本按 1 兼容。
-- 管理后台模型配置里的“模型名称”从 `GET /api/admin/provider-models` 读取供应商模型并保存为真实 `modelName`；“模型别名”即 `displayName`，可由管理员修改。
+- 管理后台模型配置里的“模型名称”从 `GET /api/admin/provider-models` 读取供应商模型作为输入建议并保存为真实 `modelName`；供应商列表读取失败时仍可手动输入真实模型 ID；“模型别名”即 `displayName`，可由管理员修改。
 - 用户前台模型下拉只展示 `displayName`，创建视频任务时仍提交供应商 `modelName`，不要把展示名传给供应商。
 - 真实供应商成功任务会下载 `/content` 写入后端本地目录，用户端下载按钮请求签名下载地址；`VIDEO_STORAGE_DIR` 可覆盖本地视频文件目录。
 - 用户兑换记录已接入：`GET /api/credits/redemptions` 返回当前用户脱敏兑换历史。
@@ -65,10 +65,10 @@
 - 用户端兑换记录和管理员端兑换码记录都展示 `validityDays`，单位为天；用户端左下角可用积分区域显示有效期倒计时：“还剩 N 天”、永久或 `--`。
 - 用户端启动顺序是防回归重点：`index.html` 必须先初始化 `redemptionRecords` 等状态，再调用 `updateUserUI(readStoredUser())`；`updateCreditValidity()` 默认参数不能引用尚未初始化的 `redemptionRecords`，否则刷新后脚本中断，按钮不可点击且历史视频不渲染。
 - 生成参数下拉框统一使用 `.select-control` 自定义样式；不要重新退回浏览器默认下拉框。
-- 参考图/参考视频/参考音频上传已进入创建任务 payload：图片最多 4 张并传 `images`，视频最多 3 个并传 `videos`，音频最多 1 个并传 `audios`；后端 `/api/video/jobs` 同步校验数量。
+- 参考图/参考视频/参考音频上传已进入创建任务 payload：图片最多 4 张并传 `images`，视频最多 3 个并传 `videos`，音频最多 1 个并传 `audios`；参考视频+参考音频原始文件总大小限制为 36MB；后端 `/api/video/jobs` 同步校验数量。
 - 真实供应商路径不会直接把 data URL 发给供应商：后端会保存 reference asset 到 `VIDEO_STORAGE_DIR/references/<jobId>/`，再把 `/api/video/reference-assets/<jobId>/<filename>` 公网 URL 提交给供应商；已有 HTTP(S) URL 原样透传。公网 origin 优先来自管理后台系统设置，其次是 `PUBLIC_API_BASE_URL`，最后才尝试从非本地请求域名推断。
 - 参考图片提交前会在前端压缩成长边 1280px 的 JPEG data URL；后端拒绝超大的图片 data URL；失败任务队列卡片会显示失败原因摘要。
-- 参考素材当前以前端 base64 data URL 放入 JSON 请求体提交；后端默认 `REQUEST_BODY_LIMIT_BYTES=67108864`，Debian Nginx 模板 `client_max_body_size 100m`。若上传图片后出现 `Failed to fetch`，优先检查 body limit、Nginx 限制和图片体积；若供应商返回 `PUBLIC_API_BASE_URL_REQUIRED`，先填系统设置公网 API 地址；若返回 `PUBLIC_API_BASE_URL_CERT_INVALID` 或原始错误包含 `x509: certificate has expired`，续期公网 API 地址域名证书并重载 Nginx。
+- 参考素材当前以前端 base64 data URL 放入 JSON 请求体提交；前端限制参考视频+参考音频原始文件总大小不超过 36MB；后端默认 `REQUEST_BODY_LIMIT_BYTES=67108864`，Debian Nginx 模板 `client_max_body_size 100m`。若上传素材后出现 `Failed to fetch`，优先检查 body limit、Nginx 限制和实际素材体积；若供应商返回 `PUBLIC_API_BASE_URL_REQUIRED`，先填系统设置公网 API 地址；若返回 `PUBLIC_API_BASE_URL_CERT_INVALID` 或原始错误包含 `x509: certificate has expired`，续期公网 API 地址域名证书并重载 Nginx。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 通过；本地已对新增 `system_settings` 执行 `npm run prisma:deploy`。
 - 部署文档已更新：根目录 `README.md` 指向 `docs/operations/debian-12-github-deployment-guide.md`。该文档按 Debian 12 + GitHub 仓库 `https://github.com/Ttt599536561/ai-video-sd.git` 写了完整命令，包含端口冲突、Nginx 反代、公网 IP/域名、后台初始化、URL/Key 和积分套餐是否需要重配。
 

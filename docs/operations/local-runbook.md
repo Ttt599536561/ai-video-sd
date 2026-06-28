@@ -99,7 +99,7 @@ npm run provider:smoke
 
 参考素材会随用户生成任务提交给后端，再由后端转交供应商：图片最多 4 张传 `images`，视频最多 3 个传 `videos`，音频最多 1 个传 `audios`。前端提交 data URL 时，后端会保存 reference asset 并向供应商提交 `/api/video/reference-assets/...` 公网 URL。上线验证时应确认前端限制、后端 `/api/video/jobs` 校验、管理后台公网 API 地址、Nginx 代理和 HTTPS 证书都正常。
 
-当前静态前端会把参考素材作为 base64 data URL 放进 JSON 请求体。`REQUEST_BODY_LIMIT_BYTES` 控制后端 JSON body 上限，默认 64 MiB；如果用户上传图片后点击生成出现 `Failed to fetch`，优先检查该上限、Nginx `client_max_body_size` 和实际图片体积。
+当前静态前端会把参考素材作为 base64 data URL 放进 JSON 请求体。参考视频+参考音频原始文件总大小限制为 36MB；`REQUEST_BODY_LIMIT_BYTES` 控制后端 JSON body 上限，默认 64 MiB；如果用户上传图片后点击生成出现 `Failed to fetch`，优先检查该上限、Nginx `client_max_body_size` 和实际素材体积。
 
 如果供应商返回 `PUBLIC_API_BASE_URL_REQUIRED`，说明后端无法得到供应商可访问的公网 API 地址；优先在管理后台“系统设置”填写。若返回 `PUBLIC_API_BASE_URL_CERT_INVALID` 或原始错误包含 `x509: certificate has expired`，说明公网 API 地址的 HTTPS 证书过期或不可验证，需要续期证书并重载 Nginx。
 
@@ -150,7 +150,7 @@ pg_restore --clean --if-exists -d "$env:DATABASE_URL" backup-ai-video.dump
 
 ## 本地注意事项
 
-- 未设置 `DATABASE_URL` 时才会回退到内存仓储，后端重启后会清空用户、兑换码和记录；正常本地开发应使用 PostgreSQL。
+- 生产环境未设置 `DATABASE_URL` 会拒绝启动；只有显式设置 `USE_IN_MEMORY_STORE=true` 时才会回退到内存仓储，后端重启后会清空用户、兑换码和记录。正常本地开发也应使用 PostgreSQL。
 - 设置 `DATABASE_URL` 后，后端启动日志应显示 `Using PostgreSQL/Prisma persistent store.`。
 - Docker PostgreSQL 数据保存在 `backend_postgres_data` volume 里；不要运行 `docker compose down -v`，否则会清空数据库。
 - Windows 本地优先使用 `127.0.0.1` 连接 PostgreSQL，避免 `localhost` 解析到 IPv6 `::1` 后连接失败。

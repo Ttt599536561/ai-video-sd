@@ -282,6 +282,12 @@
         window.location.replace(redirectTarget);
       }
 
+      function refreshIcons() {
+        if (window.lucide?.createIcons) {
+          window.lucide.createIcons();
+        }
+      }
+
       function showToast(message) {
         toast.textContent = message;
         toast.classList.add("show");
@@ -395,12 +401,12 @@
           } finally {
             button.disabled = false;
             button.innerHTML = originalHtml;
-            lucide.createIcons();
+            refreshIcons();
           }
         });
       });
 
-      lucide.createIcons();
+      refreshIcons();
     </script>
   </body>
 </html>
