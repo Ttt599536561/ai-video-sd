@@ -8,7 +8,7 @@
 
 ## 目标
 
-- 先完成可本地运行、可点击验证的 MVP。
+- 生产系统已上线并完成 favicon 补丁更新；接下来进入优化和完善阶段。
 - 后端保护模型 URL 和 Key，前端只请求自有 API。
 - 积分体系支持购买套餐配置和后台生成兑换码。
 - 视频生成记录、文件和管理员可见记录保留 3 天。
@@ -19,7 +19,7 @@
 - 用户端：登录注册、视频生成页、项目页、生成记录页、购买积分页、兑换积分页。
 - 管理端：模型配置、套餐配置、兑换码管理、用户管理、视频记录、操作审计、系统设置。
 - 后端：认证、积分、兑换码、管理员配置、视频任务接口、本地 Mock 视频任务状态机和真实供应商代码路径。
-- 部署：优先支持单台美国服务器部署，当前已使用 PostgreSQL/Redis；后续可拆数据库和对象存储。
+- 部署：当前已完成公网生产部署，使用 PostgreSQL/Redis、systemd 和 Nginx；后续可拆数据库、对象存储和队列。
 
 ## 当前状态
 
@@ -68,9 +68,10 @@
 - ~~完成参考素材真实提交修复：前端仍以 data URL 提交图片/视频/音频，后端会保存参考素材到本地 `references/<jobId>/`，再把公网 HTTP(S) URL 提交给供应商的 `images`、`videos`、`audios` 字段，避免供应商拿到 base64 data URL 后返回 `task_id is empty`。~~
 - ~~完成管理员“系统设置”：后台可保存公网 API 地址，生成任务转换参考素材 URL 时优先使用该数据库配置；未配置时回退 `PUBLIC_API_BASE_URL` 环境变量，再尝试从非本地域名请求头推断。新增 Prisma `system_settings` 表，部署需执行 `npm run prisma:deploy`。~~
 - ~~完成供应商 TLS 证书错误友好提示：当供应商抓取参考素材 URL 时遇到 `x509` 证书过期/不可验证，后端映射为 `PUBLIC_API_BASE_URL_CERT_INVALID` 并提示更新公网 API 地址域名证书。~~
+- ~~完成公网生产部署和补丁更新：用户已确认系统部署成功、上线成功，并已把 `favicon.svg` 站点图标补丁更新到生产服务器。~~
 - 用户反馈真实生成已能成功生成视频；当前重点是继续观察真实闭环稳定性、参考素材公网访问稳定性和失败兜底。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 和本地 `npm run prisma:deploy` 已用于新增 `system_settings`。
-- 下一阶段重点是观察真实生成闭环稳定性：供应商 task id、后台同步、内容下载、本地资产、项目页播放/下载；同时继续补审计筛选/分页/导出和部署演练。
+- 下一阶段重点是优化和完善：观察真实生成闭环稳定性，优化用户端生成体验和管理后台操作效率，补审计筛选/分页/导出、备份回滚演练、Redis/BullMQ 守护监控和视频文件清理策略。
 
 ## 文档地图
 
@@ -137,6 +138,7 @@ admin-code-1782584735007@example.com / password123
 
 - GitHub 仓库部署入口：[docs/operations/debian-12-github-deployment-guide.md](docs/operations/debian-12-github-deployment-guide.md)。
 - 生产服务器推荐 Debian 12.0 64bit，后端由 systemd 运行，Nginx 托管静态页面并反代 `/api/` 与 `/health`，PostgreSQL 保存业务数据，Redis 支撑真实视频任务状态同步。
+- 当前生产服务器已完成 `favicon.svg` 补丁更新；普通前端补丁更新只需要服务器 `git pull origin main` 后复制静态文件并重载 Nginx，不需要重新注册管理员或重新配置套餐、模型、系统设置、供应商 URL/Key。
 - 同一台服务器可以再部署本项目，但需要独立目录、独立数据库、独立 systemd 服务名和不冲突的后端端口；若 `4000` 被占用，可改为 `4100` 并同步修改 Nginx `proxy_pass`。
 - 新服务器不会自动继承本地数据库里的积分套餐、模型配置、系统设置或用户积分；除非做数据库备份恢复，否则上线后需要在管理后台重新配置。
 - 上传参考素材生成真实任务要求公网 HTTPS 地址可访问 `/api/video/reference-assets/...`；本地未上线时，供应商访问参考素材 URL 会失败，即使 `/health` 返回正常。

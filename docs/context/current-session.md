@@ -73,7 +73,7 @@
 - ~~完成管理员后台“系统设置”：新增公网 API 地址配置，优先用于供应商抓取参考素材；新增 Prisma `system_settings` 表和 `/api/admin/system-settings` 接口。部署或本地更新后需执行 `npm run prisma:deploy` 和 `npm run prisma:generate`。~~
 - ~~完成供应商 TLS 证书错误友好提示：公网 API 地址证书过期/不可验证会映射为 `PUBLIC_API_BASE_URL_CERT_INVALID`。~~
 - ~~完成公网生产部署：用户已确认系统部署成功并已上线。后续更新按 GitHub `main` 拉取并发布，不需要重新初始化管理员或重新配置已存在的生产数据库业务数据。~~
-- ~~完成站点图标补丁：新增根目录 `favicon.svg`，三个入口页统一引用 `/favicon.svg`，部署文档已要求把 `favicon.svg` 同步到 `/var/www/ai-video`。~~
+- ~~完成站点图标补丁并更新到生产服务器：新增根目录 `favicon.svg`，三个入口页统一引用 `/favicon.svg`，用户已确认补丁更新成功。~~
 
 ## 当前状态
 
@@ -96,14 +96,14 @@
 - 生产级模型 Key 轮换和旧密文迁移已完成；审计日志后续可补筛选、分页、导出和保留策略；错误提示后续可补更细字段级表单提示。
 - 当前真实供应商提交已验证到供应商业务错误层：历史一次真实 `POST /v1/videos` 返回 `insufficient_user_quota`；后续又发现上传参考素材时供应商会校验公网参考素材 URL 的 HTTPS 证书，证书过期会拒绝抓取。用户已说明额度已充值，并要求后续持续允许真实生成。后续用户反馈真实生成已经能成功生成视频。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 通过；本地已对新增 `system_settings` 执行 `npm run prisma:deploy`；本地 `/health` 正常。历史 `npm run provider:smoke` 只读调用供应商 `GET /v1/models` 通过并返回 `video-ds-2.0`、`video-ds-2.0-fast`。
-- 当前生产部署已由用户确认成功上线。上线系统后续应用普通代码补丁时，生产 PostgreSQL 内的管理员账号、模型配置、供应商 URL/Key、积分套餐、系统设置、兑换码和用户积分会保留；只有换数据库、清空数据库或恢复另一份备份时才需要重新初始化。
-- 当前 favicon 补丁不涉及数据库 migration 或后端逻辑；服务器上最短更新方式是 `cd /opt/ai-video && sudo -u ai-video git pull origin main`，再把 `auth.html`、`index.html`、`admin.html`、`favicon.svg` 安装到 `/var/www/ai-video`，然后 `sudo nginx -t && sudo systemctl reload nginx`。
+- 当前生产部署已由用户确认成功上线，且 `favicon.svg` 站点图标补丁已在生产服务器更新成功。上线系统后续应用普通代码补丁时，生产 PostgreSQL 内的管理员账号、模型配置、供应商 URL/Key、积分套餐、系统设置、兑换码和用户积分会保留；只有换数据库、清空数据库或恢复另一份备份时才需要重新初始化。
+- 当前工作重心转入优化和完善阶段。优先从用户端生成体验、真实生成闭环稳定性、管理后台效率、审计日志、备份回滚、Redis/BullMQ 守护监控和视频文件清理策略里选任务推进。
 
 ## 下一步建议
 
-1. 观察真实生成闭环：供应商 task id、后台同步、内容下载、本地资产、项目页播放/下载、参考素材公网抓取和证书有效性。
-2. 后续可在供应商支持时补 webhook 回调入口。
-3. 继续细化审计日志筛选、分页、导出和保留策略。
+1. 优化用户端生成体验：失败原因、任务状态、生成记录、项目页播放/下载和参考素材上传提示。
+2. 完善管理后台：审计日志筛选/分页/导出、用户/套餐/模型操作效率、生产配置可视化检查。
+3. 完善生产运维：备份与回滚演练、Redis/BullMQ 守护监控、视频文件清理策略，供应商支持时再补 webhook 回调入口。
 
 ## 中断恢复提示
 

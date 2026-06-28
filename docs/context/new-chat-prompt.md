@@ -70,8 +70,9 @@
 - 参考图片提交前会在前端压缩成长边 1280px 的 JPEG data URL；后端拒绝超大的图片 data URL；失败任务队列卡片会显示失败原因摘要。
 - 参考素材当前以前端 base64 data URL 放入 JSON 请求体提交；前端限制参考视频+参考音频原始文件总大小不超过 36MB；后端默认 `REQUEST_BODY_LIMIT_BYTES=67108864`，Debian Nginx 模板 `client_max_body_size 100m`。若上传素材后出现 `Failed to fetch`，优先检查 body limit、Nginx 限制和实际素材体积；若供应商返回 `PUBLIC_API_BASE_URL_REQUIRED`，先填系统设置公网 API 地址；若返回 `PUBLIC_API_BASE_URL_CERT_INVALID` 或原始错误包含 `x509: certificate has expired`，续期公网 API 地址域名证书并重载 Nginx。
 - 最近验证：`npm test` 通过 18 个测试文件、136 个测试；`npm run build` 通过；`npm run prisma:generate` 通过；本地已对新增 `system_settings` 执行 `npm run prisma:deploy`。
-- 生产部署已由用户确认成功上线。部署文档已更新：根目录 `README.md` 指向 `docs/operations/debian-12-github-deployment-guide.md`。该文档按 Debian 12 + GitHub 仓库 `https://github.com/Ttt599536561/ai-video-sd.git` 写了完整命令，包含端口冲突、Nginx 反代、公网 IP/域名、后台初始化、URL/Key 和积分套餐是否需要重配。
-- 已上线服务器应用普通代码补丁时，生产 PostgreSQL 里的管理员账号、模型配置、供应商 URL/Key、积分套餐、系统设置、兑换码和用户积分会保留；只有换数据库、清空数据库或恢复另一份备份时才需要重新初始化。当前 `favicon.svg` 补丁只需要服务器 `git pull origin main` 后重新安装 `auth.html`、`index.html`、`admin.html`、`favicon.svg` 到 `/var/www/ai-video` 并重载 Nginx。
+- 生产部署已由用户确认成功上线，且 `favicon.svg` 站点图标补丁已在生产服务器更新成功。部署文档已更新：根目录 `README.md` 指向 `docs/operations/debian-12-github-deployment-guide.md`。该文档按 Debian 12 + GitHub 仓库 `https://github.com/Ttt599536561/ai-video-sd.git` 写了完整命令，包含端口冲突、Nginx 反代、公网 IP/域名、后台初始化、URL/Key 和积分套餐是否需要重配。
+- 已上线服务器应用普通代码补丁时，生产 PostgreSQL 里的管理员账号、模型配置、供应商 URL/Key、积分套餐、系统设置、兑换码和用户积分会保留；只有换数据库、清空数据库或恢复另一份备份时才需要重新初始化。
+- 当前任务阶段已经从部署转入优化和完善；后续优先围绕用户端生成体验、真实生成闭环稳定性、管理后台效率、审计日志、备份回滚和生产监控推进。
 
 工作规则：
 - 不要连接内置浏览器，不要截图验证，除非我明确要求。
@@ -82,7 +83,7 @@
 - 真实生成当前已按用户要求持续启用；不要把供应商 Key 输出或写入前端/文档。
 
 接下来优先做：
-1. 观察真实生成闭环：供应商 task id、后台同步、内容下载、本地资产、项目页播放/下载、参考素材公网抓取和 HTTPS 证书有效性。
-2. 继续完善生产运维：Redis/BullMQ 进程守护、视频文件清理策略、审计日志筛选/分页/导出、备份与回滚演练。
-3. 后续如供应商支持，可补 webhook 回调入口。
+1. 优化用户端生成体验：失败原因、任务状态、生成记录、项目页播放/下载和参考素材上传提示。
+2. 完善管理后台：审计日志筛选/分页/导出、用户/套餐/模型操作效率、生产配置可视化检查。
+3. 完善生产运维：备份与回滚演练、Redis/BullMQ 守护监控、视频文件清理策略；供应商支持时再补 webhook 回调入口。
 ```

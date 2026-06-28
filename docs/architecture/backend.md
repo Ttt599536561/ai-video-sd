@@ -51,4 +51,5 @@
 
 - 真实任务状态同步已接入 Redis/BullMQ 后台轮询，后续可在供应商支持时补 webhook 回调入口。
 - 审计日志后续补筛选、分页、导出和保留策略。
+- 生产优化阶段重点补备份与回滚演练、Redis/BullMQ 守护监控、视频文件清理策略和真实生成失败兜底。
 - 后续可把当前 `PrismaBackedStore` 适配器逐步替换为各模块直接 Prisma repository。

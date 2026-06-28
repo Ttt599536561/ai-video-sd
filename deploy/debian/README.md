@@ -269,7 +269,7 @@ https://example.com/admin.html
 
 ## 12. 发布更新流程
 
-如果只是应用 `favicon.svg` 这类静态前端补丁，已上线服务器可以使用短流程：
+`favicon.svg` 站点图标补丁已经在生产服务器更新成功。如果只是应用这类静态前端补丁，已上线服务器可以使用短流程：
 
 ```bash
 cd /opt/ai-video

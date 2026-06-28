@@ -2,7 +2,7 @@
 
 本文档适用于一台 Debian 12.0 64bit 服务器。服务器上可以已经部署其他项目，本项目会使用独立目录、独立数据库、独立 systemd 服务和独立 Nginx 站点配置，默认后端端口为 `4000`。如果服务器已有项目也占用了 `4000`，请按本文“端口冲突处理”改成其他端口。
 
-当前项目已经完成生产上线。本文前半部分仍保留给新服务器从零部署使用；已上线服务器只更新代码时，直接看第 22 节“部署后更新代码”。
+当前项目已经完成生产上线，并已成功更新 `favicon.svg` 站点图标补丁。本文前半部分仍保留给新服务器从零部署使用；已上线服务器只更新代码时，直接看第 22 节“部署后更新代码”。
 
 ## 0. 你需要先准备什么
 
@@ -674,16 +674,16 @@ https://ai.你的域名/admin.html
 
 以后你在本地更新代码并推送 GitHub 后，在服务器执行：
 
-### 22.1 本次 favicon 补丁的最短更新方式
+### 22.1 已验证的静态前端补丁更新方式
 
-这次补丁只新增 `favicon.svg` 并让 `auth.html`、`index.html`、`admin.html` 引用它，同时更新文档和测试；没有新增数据库迁移，也没有修改后端运行逻辑。已上线服务器可以只更新代码和静态前端文件：
+`favicon.svg` 站点图标补丁已经在生产服务器更新成功。类似只改静态前端文件、没有新增数据库迁移、没有修改后端运行逻辑的补丁，已上线服务器可以只更新代码和静态前端文件：
 
 ```bash
 cd /opt/ai-video
 sudo -u ai-video git pull origin main
 ```
 
-说明：从 GitHub 拉取最新代码，其中包含 `favicon.svg` 和三个 HTML 页面的 favicon 引用。
+说明：从 GitHub 拉取最新代码。
 
 ```bash
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/auth.html /var/www/ai-video/auth.html
@@ -692,7 +692,7 @@ sudo install -o www-data -g www-data -m 0644 /opt/ai-video/admin.html /var/www/a
 sudo install -o www-data -g www-data -m 0644 /opt/ai-video/favicon.svg /var/www/ai-video/favicon.svg
 ```
 
-说明：把最新前端静态文件复制到 Nginx 站点目录。`favicon.svg` 是这次新增的站点图标文件，必须一起复制，否则浏览器会请求到 404。
+说明：把最新前端静态文件复制到 Nginx 站点目录。只要页面引用了新增静态文件，就必须一起复制，否则浏览器会请求到 404。
 
 ```bash
 sudo nginx -t
@@ -703,7 +703,7 @@ curl -I https://你的域名/favicon.svg
 
 说明：检查 Nginx 配置、重载 Nginx，并确认后端健康和站点图标可访问。`curl -I https://你的域名/favicon.svg` 应返回 `200`。
 
-这次补丁不需要重新创建管理员，不需要重新配置积分套餐，不需要重新填写供应商 URL/Key，也不需要清空或重建数据库。
+这类静态补丁不需要重新创建管理员，不需要重新配置积分套餐，不需要重新填写供应商 URL/Key，也不需要清空或重建数据库。
 
 ### 22.2 通用完整更新方式
 
